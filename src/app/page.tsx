@@ -11,7 +11,7 @@ import { useEffect } from "react";
 export default function Home() {
   const router = useRouter();
   const { data: user, isLoading: isUserLoading } = useCurrentUser();
-  const { boards, homeBoard, isLoading: isBoardsLoading } = useGetBoards();
+  const { homeBoard, isLoading: isBoardsLoading } = useGetBoards();
   const createBoard = useCreateBoard();
 
   useEffect(() => {

@@ -65,20 +65,20 @@ export const SignUpScreen = () => {
             </CardHeader>
             <CardContent className="">
                 <form onSubmit={onPasswordSignUp} className="space-y-4">
-                    <Input className="w-full" type="text" placeholder="Username" onChange={(e) => setName(e.target.value)} value={name} />
-                    <Input className="w-full" type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} value={email}/>
-                    <Input className="w-full" type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} value={password}/>
-                    <Input className="w-full" type="password" placeholder="Password" onChange={(e) => setConfirmPassword(e.target.value)} value={confirmPassword}/>
-                    <Button className="w-full p-5 font-semibold text-sm" type="submit">
+                    <Input className="w-full" type="text" placeholder="Username" onChange={(e) => setName(e.target.value)} value={name} disabled={pending} required/>
+                    <Input className="w-full" type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} value={email} disabled={pending} required/>
+                    <Input className="w-full" type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} value={password} disabled={pending} required/>
+                    <Input className="w-full" type="password" placeholder="Password" onChange={(e) => setConfirmPassword(e.target.value)} value={confirmPassword} disabled={pending} required/>
+                    <Button className="w-full p-5 font-semibold text-sm" type="submit" disabled={pending}>
                         Sign Up
                     </Button>
                 </form>
                 <Separator className="my-5" />
                 <div className="flex justify-center items-center space-x-6">
-                    <Button variant={'outline'} className="rounded-full p-2 h-auto" onClick={() => {handleProviderLogin("google")}}>
+                    <Button variant={'outline'} className="rounded-full p-2 h-auto" onClick={() => {handleProviderLogin("google")}} disabled={pending}>
                         <FcGoogle className="size-10" />
                     </Button>
-                    <Button variant={'outline'} className="rounded-full p-2 h-auto" onClick={() => {handleProviderLogin("github")}}>
+                    <Button variant={'outline'} className="rounded-full p-2 h-auto" onClick={() => {handleProviderLogin("github")}} disabled={pending}>
                         <FaGithub />
                     </Button>
                 </div>
