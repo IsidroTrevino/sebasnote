@@ -1,8 +1,8 @@
 'use client';
 
-import { LogInScreen } from "@/app/features/auth/logInScreen";
+import { LogInScreen } from "@/features/auth/logInScreen";
 
-export default function AuthPage() {
+export default function LogInPage() {
   return (
     <div className="h-full w-full bg-[#ae6ed3]">
       <div className="flex justify-center items-center h-full">
