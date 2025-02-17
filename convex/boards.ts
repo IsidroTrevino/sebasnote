@@ -59,7 +59,6 @@ export const create = mutation({
         name: args.name,
         userId,
         parentId: args.parentId,
-        position: { x: 0, y: 0 },
         createdAt: Date.now(),
         updatedAt: Date.now()
         });

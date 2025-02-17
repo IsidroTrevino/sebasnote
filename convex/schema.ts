@@ -8,10 +8,6 @@ const schema = defineSchema({
         name: v.string(),
         userId: v.string(),
         parentId: v.optional(v.id("boards")),
-        position: v.object({
-            x: v.number(),
-            y: v.number()
-        }),
         createdAt: v.number(),
         updatedAt: v.number()
     }),
