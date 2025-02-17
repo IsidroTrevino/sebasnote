@@ -46,45 +46,91 @@ export const SignUpScreen = () => {
             throw new Error("Error: " + error);
         }
     };
-
+    
     return (
-        <Card className="w-[420px] h-auto px-5 rounded-xl shadow-lg">
+        <Card className="w-[420px] h-auto px-5 rounded-xl shadow-lg bg-[#2a2a2a] border-[#3a3a3a]">
             <CardHeader className="gap-y-4">
-                <CardTitle className="font-bold text-3xl">
+                <CardTitle className="font-bold text-3xl text-gray-200">
                     Sign Up
                 </CardTitle>
-                <CardDescription className="font-normal text-muted-foreground pb-4">
+                <CardDescription className="font-normal text-gray-400">
                     Make sure to fill all the fields to sign up.
                 </CardDescription>
                 {!!error && (
-                <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive mb-6">
-                    <TriangleAlert className="size-4"/>
-                    <p>{error}</p>
-                </div>
-            )}
+                    <div className="bg-red-500/10 p-3 rounded-md flex items-center gap-x-2 text-sm text-red-400">
+                        <TriangleAlert className="size-4"/>
+                        <p>{error}</p>
+                    </div>
+                )}
             </CardHeader>
             <CardContent className="">
                 <form onSubmit={onPasswordSignUp} className="space-y-4">
-                    <Input className="w-full" type="text" placeholder="Username" onChange={(e) => setName(e.target.value)} value={name} disabled={pending} required/>
-                    <Input className="w-full" type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} value={email} disabled={pending} required/>
-                    <Input className="w-full" type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} value={password} disabled={pending} required/>
-                    <Input className="w-full" type="password" placeholder="Password" onChange={(e) => setConfirmPassword(e.target.value)} value={confirmPassword} disabled={pending} required/>
-                    <Button className="w-full p-5 font-semibold text-sm" type="submit" disabled={pending}>
+                    <Input 
+                        className="w-full bg-[#1a1a1a] border-[#3a3a3a] text-gray-200 placeholder:text-gray-500 focus:ring-[#4a4a4a] focus:border-[#4a4a4a]" 
+                        type="text" 
+                        placeholder="Username" 
+                        onChange={(e) => setName(e.target.value)} 
+                        value={name} 
+                        disabled={pending} 
+                        required
+                    />
+                    <Input 
+                        className="w-full bg-[#1a1a1a] border-[#3a3a3a] text-gray-200 placeholder:text-gray-500 focus:ring-[#4a4a4a] focus:border-[#4a4a4a]" 
+                        type="email" 
+                        placeholder="Email" 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        value={email} 
+                        disabled={pending} 
+                        required
+                    />
+                    <Input 
+                        className="w-full bg-[#1a1a1a] border-[#3a3a3a] text-gray-200 placeholder:text-gray-500 focus:ring-[#4a4a4a] focus:border-[#4a4a4a]" 
+                        type="password" 
+                        placeholder="Password" 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        value={password} 
+                        disabled={pending} 
+                        required
+                    />
+                    <Input 
+                        className="w-full bg-[#1a1a1a] border-[#3a3a3a] text-gray-200 placeholder:text-gray-500 focus:ring-[#4a4a4a] focus:border-[#4a4a4a]" 
+                        type="password" 
+                        placeholder="Password" 
+                        onChange={(e) => setConfirmPassword(e.target.value)} 
+                        value={confirmPassword} 
+                        disabled={pending} 
+                        required
+                    />
+                    <Button 
+                        className="w-full p-5 font-semibold text-sm bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200" 
+                        type="submit" 
+                        disabled={pending}
+                    >
                         Sign Up
                     </Button>
                 </form>
-                <Separator className="my-5" />
+                <Separator className="my-5 bg-[#3a3a3a]" />
                 <div className="flex justify-center items-center space-x-6">
-                    <Button variant={'outline'} className="rounded-full p-2 h-auto" onClick={() => {handleProviderLogin("google")}} disabled={pending}>
+                    <Button 
+                        variant={'outline'} 
+                        className="rounded-full p-2 h-auto bg-[#2a2a2a] border-[#3a3a3a] hover:bg-[#3a3a3a]" 
+                        onClick={() => {handleProviderLogin("google")}} 
+                        disabled={pending}
+                    >
                         <FcGoogle className="size-10" />
                     </Button>
-                    <Button variant={'outline'} className="rounded-full p-2 h-auto" onClick={() => {handleProviderLogin("github")}} disabled={pending}>
-                        <FaGithub />
+                    <Button 
+                        variant={'outline'} 
+                        className="rounded-full p-2 h-auto bg-[#2a2a2a] border-[#3a3a3a] hover:bg-[#3a3a3a]" 
+                        onClick={() => {handleProviderLogin("github")}} 
+                        disabled={pending}
+                    >
+                        <FaGithub className="text-gray-200"/>
                     </Button>
                 </div>
             </CardContent>
-            <CardFooter className="font-normal text-muted-foreground text-sm flex items-center justify-center">
-                Already have an account? <Link href="/auth/LogIn" className="ml-1 underline text-sky-400 font-medium">Log In</Link>
+            <CardFooter className="font-normal text-gray-400 text-sm flex items-center justify-center">
+                Already have an account? <Link href="/auth/LogIn" className="ml-1 text-blue-400 hover:text-blue-300 font-medium">Log In</Link>
             </CardFooter>
         </Card>
     );

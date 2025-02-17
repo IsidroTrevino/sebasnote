@@ -7,26 +7,28 @@ import { useBoardId } from "@/features/boards/api/useBoardId";
 import { useGetBoard } from "@/features/boards/api/useGetBoard";
 import { cn } from "@/lib/utils";
 import { UserButton } from "@/components/userButton";
+import { BoardType } from "@/features/types/boardType";
 
-const Header = () => {
-    const ancestors = useBoardAncestors();
-    const isLoading = ancestors === undefined;
-    const boardId = useBoardId();
-    const {data: board} = useGetBoard({id: boardId});
+interface HeaderProps {
+    ancestorsData?: BoardType[];
+    currentBoard?: BoardType;
+    isLoading: boolean;
+}
 
+const Header = ({ ancestorsData, currentBoard, isLoading }: HeaderProps) => {
     return (
-        <div className="flex flex-col bg-gray-200 shadow-lg">
+        <div className="flex flex-col bg-[#2a2a2a] shadow-lg border-b border-[#3a3a3a]">
             <div className="h-16 w-full flex items-center justify-between px-6">
                 <div className="flex items-center gap-2 text-white">
                     {isLoading ? (
                         <Loader className="size-4 animate-spin text-muted-foreground" />
                     ) : (
-                        ancestors?.map((board, index) => (
+                        ancestorsData?.map((board, index) => (
                             <div key={board._id} className="flex items-center gap-2">
-                                {index > 0 && <ChevronRight className="size-4 text-black" />}
+                                {index > 0 && <ChevronRight className="size-4 text-gray-400" />}
                                 <Link 
                                     href={`/${board._id}/${encodeURIComponent(board.name)}`}
-                                    className="hover:underline transition text-black font-semibold"
+                                    className="hover:underline transition text-gray-400 font-semibold"
                                 >
                                     {board.name}
                                 </Link>
@@ -36,14 +38,8 @@ const Header = () => {
                 </div>
                 <UserButton/>
             </div>
-            <div className={cn(board?.name === "Home" ? "flex items-center justify-center text-2xl font-bold" : "flex items-center justify-center text-2xl font-bold pb-4")}>
-                {
-                    board?.name === "Home" ? (
-                        ""
-                    ) : (
-                        board?.name
-                    )
-                }
+            <div className={cn(currentBoard?.name === "Home" ? "flex items-center justify-center text-2xl font-bold" : "flex items-center justify-center text-2xl font-bold pb-4")}>
+                {currentBoard?.name === "Home" ? "" : currentBoard?.name}
             </div>
         </div>
     );

@@ -4,7 +4,7 @@ import { LogInScreen } from "@/features/auth/logInScreen";
 
 export default function LogInPage() {
   return (
-    <div className="h-full w-full bg-[#ae6ed3]">
+    <div className="h-full w-full bg-[#1a1a1a]">
       <div className="flex justify-center items-center h-full">
         <LogInScreen />
       </div>

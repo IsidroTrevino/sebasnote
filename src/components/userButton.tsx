@@ -43,7 +43,7 @@ export const UserButton = () => {
                 <div className="flex flex-col items-center p-4">
                     <div className="flex flex-row items-center gap-x-8">
                         <div className="truncate w-[180px]">
-                            <p className="text-md font-medium">{name}</p>
+                            <p className="text-md font-medium truncate">{name}</p>
                             <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                         <div>

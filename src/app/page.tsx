@@ -37,7 +37,7 @@ export default function Home() {
 
   if (isUserLoading || isBoardsLoading) {
     return (
-      <div className="flex items-center justify-center h-full w-full">
+      <div className="flex items-center justify-center h-full w-full bg-[#1a1a1a] text-gray-200">
         <Loader className="size-4 animate-spin text-muted-foreground"/>
       </div>
     );

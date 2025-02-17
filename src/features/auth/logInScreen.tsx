@@ -36,18 +36,18 @@ export const LogInScreen = () => {
             setPending(false);
         });
     }
-
+    
     return (
-        <Card className="w-[420px] h-auto px-5 rounded-xl shadow-lg">
+        <Card className="w-[420px] h-auto px-5 rounded-xl shadow-lg bg-[#2a2a2a] border-[#3a3a3a]">
             <CardHeader className="gap-y-4">
-                <CardTitle className="font-bold text-3xl">
+                <CardTitle className="font-bold text-3xl text-gray-200">
                     Log In
                 </CardTitle>
-                <CardDescription className="font-normal text-muted-foreground">
+                <CardDescription className="font-normal text-gray-400">
                     Use your email or another provider to log in.
                 </CardDescription>
                 {!!error && (
-                <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive">
+                <div className="bg-red-500/10 p-3 rounded-md flex items-center gap-x-2 text-sm text-red-400">
                     <TriangleAlert className="size-4"/>
                     <p>{error}</p>
                 </div>
@@ -55,26 +55,51 @@ export const LogInScreen = () => {
             </CardHeader>
             <CardContent className="">
                 <form onSubmit={onPasswordSignIn} className="space-y-4">
-                    <Input className="w-full" type="email" placeholder="Email" onChange={(e) => {setEmail(e.target.value)}} value={email} required/>
-                    <Input className="w-full" type="password" placeholder="Password" onChange={(e) => {setPassword(e.target.value)}} value={password} required/>
-                    <Button className="w-full p-5 font-semibold text-sm" type="submit">
+                    <Input 
+                        className="w-full bg-[#1a1a1a] border-[#3a3a3a] text-gray-200 placeholder:text-gray-500 focus:ring-[#4a4a4a] focus:border-[#4a4a4a]" 
+                        type="email" 
+                        placeholder="Email" 
+                        onChange={(e) => {setEmail(e.target.value)}} 
+                        value={email} 
+                        required
+                    />
+                    <Input 
+                        className="w-full bg-[#1a1a1a] border-[#3a3a3a] text-gray-200 placeholder:text-gray-500 focus:ring-[#4a4a4a] focus:border-[#4a4a4a]" 
+                        type="password" 
+                        placeholder="Password" 
+                        onChange={(e) => {setPassword(e.target.value)}} 
+                        value={password} 
+                        required
+                    />
+                    <Button 
+                        className="w-full p-5 font-semibold text-sm bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200" 
+                        type="submit"
+                    >
                         Log In
                     </Button>
                 </form>
-                <Separator className="my-5" />
+                <Separator className="my-5 bg-[#3a3a3a]" />
                 <div className="flex justify-center items-center flex-col space-y-2">
                     <div className="flex justify-center items-center space-x-6">
-                        <Button variant={'outline'} className="rounded-full p-2 h-auto" onClick={() => {handleProviderLogin("google")}}>
+                        <Button 
+                            variant={'outline'} 
+                            className="rounded-full p-2 h-auto bg-[#2a2a2a] border-[#3a3a3a] hover:bg-[#3a3a3a]" 
+                            onClick={() => {handleProviderLogin("google")}}
+                        >
                             <FcGoogle className="size-10" />
                         </Button>
-                        <Button variant={'outline'} className="rounded-full p-2 h-auto" onClick={() => {handleProviderLogin("github")}}>
-                            <FaGithub />
+                        <Button 
+                            variant={'outline'} 
+                            className="rounded-full p-2 h-auto bg-[#2a2a2a] border-[#3a3a3a] hover:bg-[#3a3a3a]" 
+                            onClick={() => {handleProviderLogin("github")}}
+                        >
+                            <FaGithub className="text-gray-200" />
                         </Button>
                     </div>
                 </div>
             </CardContent>
-            <CardFooter className="font-normal text-muted-foreground text-sm flex items-center justify-center">
-                Don&apos;t have an account? <Link href="/auth/SignUp" className="ml-1 underline text-sky-400 font-medium"> Sign Up</Link>
+            <CardFooter className="font-normal text-gray-400 text-sm flex items-center justify-center">
+                Don&apos;t have an account? <Link href="/auth/SignUp" className="ml-1 text-blue-400 hover:text-blue-300 font-medium">Sign Up</Link>
             </CardFooter>
         </Card>
     );
