@@ -1,7 +1,8 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
-import {v} from "convex/values";
+import { v } from "convex/values";
+import { FilterBuilder } from "convex/server";
 
 export const get = query({
     args: {},
@@ -79,6 +80,32 @@ export const getAncestors = query({
 
         return ancestors;
     },
+});
+
+export const getChildren = query({
+    args: { parentId: v.optional(v.id("boards")) },
+    handler: async (ctx, args) => {
+        const userId = await getAuthUserId(ctx);
+
+        if (!userId) {
+            return null;
+        }
+
+        const filter = args.parentId 
+            ? (q: any) => q.and(
+                q.eq(q.field("userId"), userId),
+                q.eq(q.field("parentId"), args.parentId)
+                )
+            : (q: any) => q.and(
+                q.eq(q.field("userId"), userId),
+                q.eq(q.field("parentId"), undefined)
+                );
+
+        return await ctx.db
+            .query("boards")
+            .filter(filter)
+            .collect();
+    }
 });
 
 export const getById = query({

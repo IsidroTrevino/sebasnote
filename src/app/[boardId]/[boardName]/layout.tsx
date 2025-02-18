@@ -31,7 +31,7 @@ const BoardNameLayout = ({ children }: BoardNameLayoutProps) => {
                 maxSize={30}
                 className="bg-[#2a2a2a] border-r border-[#3a3a3a]"
             >
-                <BoardSidebar board={board as BoardType} boardChildren={boardChildren}/>
+                <BoardSidebar board={board as BoardType} />
                 <Separator className="bg-[#3a3a3a]" />
             </ResizablePanel>
 

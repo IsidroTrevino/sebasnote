@@ -1,13 +1,13 @@
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
 
-export const useGetBoards = () => {
-    const boardsData = useQuery(api.boards.get);
+export const useGetBoards = (parentId?: Id<"boards">) => {
+    const boardsData = useQuery(api.boards.getChildren, { parentId });
     const isLoading = boardsData === undefined;
 
     return {
-        boards: boardsData?.children ?? [],
-        homeBoard: boardsData?.home ?? null,
+        boards: boardsData ?? [],
         isLoading
     };
 };
