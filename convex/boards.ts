@@ -9,10 +9,7 @@ export const get = query({
         const userId = await getAuthUserId(ctx);
 
         if (!userId) {
-        return {
-            home: null,
-            children: []
-        };
+            return null;
         }
 
         const homeBoard = await ctx.db
@@ -37,8 +34,8 @@ export const get = query({
         .collect() : [];
 
         return {
-        home: homeBoard,
-        children: childBoards
+            home: homeBoard,
+            children: childBoards
         };
     }
 });
@@ -52,15 +49,15 @@ export const create = mutation({
         const userId = await getAuthUserId(ctx);
         
         if (!userId) {
-        throw new Error("Not authenticated");
+            throw new Error("Not authenticated");
         }
 
         return await ctx.db.insert("boards", {
-        name: args.name,
-        userId,
-        parentId: args.parentId,
-        createdAt: Date.now(),
-        updatedAt: Date.now()
+            name: args.name,
+            userId,
+            parentId: args.parentId,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
         });
     },
 });
