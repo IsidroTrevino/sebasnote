@@ -42,7 +42,7 @@ export default function Home() {
 
   return (
     <div className="flex items-center justify-center h-full w-full bg-[#1a1a1a] text-gray-200">
-      <Loader className="size-4 animate-spin text-muted-foreground"/>
+      <Loader className="size-20 animate-spin text-muted-foreground"/>
     </div>
   );
 }

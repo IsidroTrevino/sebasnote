@@ -98,7 +98,52 @@ export const getChildren = query({
 
 export const getById = query({
     args: { boardId: v.id("boards") },
+    
     handler: async (ctx, args) => {
         return await ctx.db.get(args.boardId);
     },
+});
+
+export const updateBoardName = mutation({
+    args: {boardId: v.id("boards"), name: v.string()},
+    handler: async (ctx, args) => {
+        const userId = await getAuthUserId(ctx);
+
+        if (!userId) {
+            throw new Error("Not authenticated");
+        }
+
+        return await ctx.db.patch(args.boardId, {
+            name: args.name,
+            updatedAt: Date.now()
+        });
+    }
+});
+
+export const deleteBoard = mutation({
+    args: { boardId: v.id("boards") },
+    handler: async (ctx, args) => {
+        const userId = await getAuthUserId(ctx);
+
+        if (!userId) {
+            throw new Error("Not authenticated");
+        }
+
+        async function deleteRecursively(boardId: Id<"boards">) {
+            const children = await ctx.db
+                .query("boards")
+                .filter((q) => q.eq(q.field("parentId"), boardId))
+                .collect();
+
+            for (const child of children) {
+                await deleteRecursively(child._id);
+            }
+
+            await ctx.db.delete(boardId);
+        }
+
+        await deleteRecursively(args.boardId);
+
+        return args.boardId;
+    }
 });

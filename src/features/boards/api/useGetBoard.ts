@@ -2,13 +2,13 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 
-interface useGetBoardProps {
-    id: Id<"boards">;
+interface UseGetBoardProps {
+  id: Id<"boards"> | undefined;
 }
 
-export const useGetBoard = ({id}: useGetBoardProps) => {
-    const data = useQuery(api.boards.getById, {boardId: id});
-    const isLoading = data === undefined;
-
-    return {data, isLoading};
+export const useGetBoard = ({ id }: UseGetBoardProps) => {
+  return useQuery(
+    api.boards.getById,
+    id ? { boardId: id } : "skip"
+  );
 };

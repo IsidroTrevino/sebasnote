@@ -17,7 +17,7 @@ const BoardNameLayout = ({ children }: BoardNameLayoutProps) => {
     const ancestors = useBoardAncestors();
     const isLoading = ancestors === undefined;
     const boardId = useBoardId();
-    const {data: board} = useGetBoard({id: boardId});
+    const board = useGetBoard({id: boardId});
 
     return (
         <div className="h-full w-full bg-[#1a1a1b] text-gray-200">
