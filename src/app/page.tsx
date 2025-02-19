@@ -1,28 +1,33 @@
 'use client';
 
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
-import { useGetBoards } from "@/features/boards/api/useGetBoards";
+import { useGetHome } from "@/features/boards/api/useGetHome";
 import { useCreateBoard } from "@/features/boards/api/useCreateBoard";
-import { useAuthActions } from "@convex-dev/auth/react";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { BoardType } from "@/features/types/boardType";
 
 export default function Home() {
   const router = useRouter();
   const { data: user, isLoading: isUserLoading } = useCurrentUser();
-  const { homeBoard, isLoading: isBoardsLoading } = useGetBoards();
-  const createBoard = useCreateBoard();
+  const { homeBoard, isLoading: isBoardsLoading } = useGetHome();
+  const {mutate} = useCreateBoard();
 
   useEffect(() => {
     const createAndRedirect = async () => {
       if (user && !isBoardsLoading) {
         if (!homeBoard) {
           try {
-            const newBoard = await createBoard({
+            const response = await mutate({
               name: "Home",
+              parentId: undefined
             });
-            router.push(`/${newBoard._id}/${encodeURIComponent("Home")}`);
+            const newBoard = response as unknown as BoardType;
+            
+            if (newBoard && newBoard._id) {
+              router.push(`/${newBoard._id}/${encodeURIComponent("Home")}`);
+            }
           } catch (error) {
             console.error("Failed to create Home board:", error);
           }
@@ -33,15 +38,11 @@ export default function Home() {
     };
 
     createAndRedirect();
-  }, [user, homeBoard, isBoardsLoading, createBoard, router]);
+  }, [user, homeBoard, isBoardsLoading, mutate, router]);
 
-  if (isUserLoading || isBoardsLoading) {
-    return (
-      <div className="flex items-center justify-center h-full w-full bg-[#1a1a1a] text-gray-200">
-        <Loader className="size-4 animate-spin text-muted-foreground"/>
-      </div>
-    );
-  }
-
-  return null;
+  return (
+    <div className="flex items-center justify-center h-full w-full bg-[#1a1a1a] text-gray-200">
+      <Loader className="size-4 animate-spin text-muted-foreground"/>
+    </div>
+  );
 }

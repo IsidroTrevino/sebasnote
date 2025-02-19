@@ -38,8 +38,8 @@ const Header = ({ ancestorsData, currentBoard, isLoading }: HeaderProps) => {
                 </div>
                 <UserButton/>
             </div>
-            <div className={cn(currentBoard?.name === "Home" ? "flex items-center justify-center text-2xl font-bold" : "flex items-center justify-center text-2xl font-bold pb-4")}>
-                {currentBoard?.name === "Home" ? "" : currentBoard?.name}
+            <div className={cn((currentBoard?.name === "Home" && currentBoard?.parentId === undefined) ? "flex items-center justify-center text-2xl font-bold" : "flex items-center justify-center text-2xl font-bold pb-4")}>
+                {currentBoard?.name === "Home" && currentBoard?.parentId === undefined ? "" : currentBoard?.name}
             </div>
         </div>
     );

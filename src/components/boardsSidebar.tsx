@@ -1,16 +1,17 @@
-import { useBoardId } from "@/features/boards/api/useBoardId";
-import { useGetBoard } from "@/features/boards/api/useGetBoard";
-import { useGetBoards } from "@/features/boards/api/useGetBoards";
+
 import { BoardType } from "@/features/types/boardType";
 import BoardItem from "./boardItem";
 import { Loader, Plus } from "lucide-react";
+import { useGetChildren } from "@/features/boards/api/useGetChildren";
+import { useCreateBoardModal } from "@/features/boards/store/useCreateBoardModal";
 
 interface BoardSidebarProps {
     board: BoardType;
 }
 
 const BoardSidebar = ({ board }: BoardSidebarProps) => {
-    const { boards: children, isLoading } = useGetBoards(board?._id);
+    const { boards: children, isLoading } = useGetChildren(board?._id);
+    const [, setOpen] = useCreateBoardModal();
 
     if (isLoading) {
         return (
@@ -24,9 +25,9 @@ const BoardSidebar = ({ board }: BoardSidebarProps) => {
         <div className="p-4 h-[50%] overflow-scroll">
             <div className="flex flex-row items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-400">
-                  {board?.name === "Home" ? "Your projects" : board?.name}
+                  {(board?.name === "Home" && board.parentId === undefined) ? "Your projects" : board?.name}
               </h2>
-              <Plus size={20} />
+              <Plus size={20} className="cursor-pointer" onClick={() => setOpen(true)}/>
             </div>
             {children?.map((child) => (
                 <BoardItem key={child._id} board={child} />

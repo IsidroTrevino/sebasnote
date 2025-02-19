@@ -8,7 +8,6 @@ import { useBoardAncestors } from "@/features/boards/api/useGetBoardAncestors";
 import { useBoardId } from "@/features/boards/api/useBoardId";
 import { useGetBoard } from "@/features/boards/api/useGetBoard";
 import { BoardType } from "@/features/types/boardType";
-import { useGetBoards } from "@/features/boards/api/useGetBoards";
 
 interface BoardNameLayoutProps {
     children: React.ReactNode;
@@ -19,10 +18,9 @@ const BoardNameLayout = ({ children }: BoardNameLayoutProps) => {
     const isLoading = ancestors === undefined;
     const boardId = useBoardId();
     const {data: board} = useGetBoard({id: boardId});
-    const {boards: boardChildren} = useGetBoards();
 
     return (
-        <div className="h-screen w-screen bg-[#1a1a1a] text-gray-200">
+        <div className="h-full w-full bg-[#1a1a1b] text-gray-200">
             <Header currentBoard={board as BoardType} ancestorsData={ancestors as BoardType[]} isLoading={isLoading}/>
             <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-4rem)]">
             <ResizablePanel 
