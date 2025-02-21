@@ -3,7 +3,7 @@ import { api } from "../../../../convex/_generated/api";
 import { useCallback, useMemo, useState } from "react";
 import { Id } from "../../../../convex/_generated/dataModel";
 
-type RequestType = { name: string, parentId: Id<"boards"> | undefined };
+type RequestType = { name: string, parentId: Id<"boards"> | undefined, isHome: boolean };
 type ResponseType = Id<"boards"> | null;
 
 type Options = {

@@ -21,7 +21,8 @@ export default function Home() {
           try {
             const response = await mutate({
               name: "Home",
-              parentId: undefined
+              parentId: undefined,
+              isHome: true
             });
             const newBoard = response as unknown as BoardType;
             
