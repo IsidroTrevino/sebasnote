@@ -22,23 +22,26 @@ const BoardNameLayout = ({ children }: BoardNameLayoutProps) => {
     return (
         <div className="h-full w-full bg-[#1a1a1b] text-gray-200">
             <Header currentBoard={board as BoardType} ancestorsData={ancestors as BoardType[]} isLoading={isLoading}/>
-            <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-4rem)]">
-            <ResizablePanel 
-                defaultSize={25}
-                minSize={20} 
-                maxSize={30}
-                className="bg-[#2a2a2a] border-r border-[#3a3a3a]"
-            >
-                <BoardSidebar board={board as BoardType} />
-                <Separator className="bg-[#3a3a3a]" />
-            </ResizablePanel>
-
-            <ResizableHandle className="bg-[#2a2a2a] border-x border-[#3a3a3a]" />
-
-            <ResizablePanel defaultSize={85} className="bg-[#1a1a1a]">
-                {children}
-            </ResizablePanel>
-        </ResizablePanelGroup>
+            {board?.parentId !== undefined && (
+                <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-4rem)]">
+                <ResizablePanel 
+                    defaultSize={25}
+                    minSize={20} 
+                    maxSize={30}
+                    className="bg-[#2a2a2a] border-r border-[#3a3a3a]"
+                >
+                    <BoardSidebar board={board as BoardType} />
+                    <Separator className="bg-[#3a3a3a]" />
+                </ResizablePanel>
+    
+                <ResizableHandle className="bg-[#2a2a2a] border-x border-[#3a3a3a]" />
+    
+                <ResizablePanel defaultSize={85} className="bg-[#1a1a1a]">
+                    {children}
+                </ResizablePanel>
+            </ResizablePanelGroup>
+            )}
+            
         </div>
     );
 }

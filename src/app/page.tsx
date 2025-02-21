@@ -40,9 +40,11 @@ export default function Home() {
     createAndRedirect();
   }, [user, homeBoard, isBoardsLoading, mutate, router]);
 
-  return (
-    <div className="flex items-center justify-center h-full w-full bg-[#1a1a1a] text-gray-200">
-      <Loader className="size-20 animate-spin text-muted-foreground"/>
+  if(isBoardsLoading || isUserLoading) {
+    return (
+      <div className="flex items-center justify-center h-full w-full bg-[#1a1a1a] text-gray-200">
+      <Loader className="size-8 animate-spin text-muted-foreground"/>
     </div>
-  );
+    );
+  }
 }
