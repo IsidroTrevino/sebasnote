@@ -2,9 +2,6 @@
 
 import Link from "next/link";
 import { ChevronRight, Loader } from "lucide-react";
-import { useBoardAncestors } from "@/features/boards/api/useGetBoardAncestors";
-import { useBoardId } from "@/features/boards/api/useBoardId";
-import { useGetBoard } from "@/features/boards/api/useGetBoard";
 import { cn } from "@/lib/utils";
 import { UserButton } from "@/components/userButton";
 import { BoardType } from "@/features/types/boardType";

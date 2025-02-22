@@ -9,8 +9,11 @@ import { useBoardId } from "@/features/boards/api/useBoardId";
 import { useGetBoard } from "@/features/boards/api/useGetBoard";
 import { BoardType } from "@/features/types/boardType";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Loader, Plus } from "lucide-react";
 import { useCreateBoardModal } from "@/features/boards/store/useCreateBoardModal";
+import ImagesSidebar from "@/components/imagesSidebar";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 interface BoardNameLayoutProps {
     children: React.ReactNode;
@@ -22,6 +25,22 @@ const BoardNameLayout = ({ children }: BoardNameLayoutProps) => {
     const boardId = useBoardId();
     const board = useGetBoard({id: boardId});
     const [, setCreateOpen] = useCreateBoardModal();
+    const router = useRouter();
+    
+
+    useEffect(() => {
+        if (!isLoading && !board) {
+            router.push('/');
+        }
+    }, [board, isLoading, router]);
+
+    if (isLoading || !board) {
+        return (
+            <div className="h-screen w-full flex items-center justify-center bg-[#1a1a1a]">
+                <Loader className="size-8 animate-spin text-muted-foreground"/>
+            </div>
+        );
+    }
 
     return (
         <div className="h-full w-full bg-[#1a1a1b] text-gray-200">
@@ -36,6 +55,7 @@ const BoardNameLayout = ({ children }: BoardNameLayoutProps) => {
                 >
                     <BoardSidebar board={board as BoardType} />
                     <Separator className="bg-[#3a3a3a]" />
+                    <ImagesSidebar board={board as BoardType} />
                 </ResizablePanel>
     
                 <ResizableHandle className="bg-[#2a2a2a] border-x border-[#3a3a3a]" />
@@ -45,8 +65,8 @@ const BoardNameLayout = ({ children }: BoardNameLayoutProps) => {
                 </ResizablePanel>
             </ResizablePanelGroup>
             ) : (
-                <div className="p-10 w-full h-full flex flex-col">
-                    <div className="flex flex-row items-center justify-end">
+                <div className="w-full h-full flex flex-col">
+                    <div className="flex flex-row items-center justify-end p-10">
                         <Button className="bg-[#2a2a2a] hover:bg-[#4a4a4a]" onClick={() => setCreateOpen(true)}> <Plus/> Create Board</Button>
                     </div>
                     <div>

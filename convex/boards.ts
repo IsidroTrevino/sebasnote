@@ -57,12 +57,21 @@ export const create = mutation({
 export const getAncestors = query({
     args: { boardId: v.id("boards") },
     handler: async (ctx, args) => {
+        const userId = await getAuthUserId(ctx);
+        
+        if (!userId) {
+            return null;
+        }
+
         const ancestors: Doc<"boards">[] = [];
         let currentBoardId: Id<"boards"> | undefined = args.boardId;
 
         while (currentBoardId !== undefined) {
             const board: Doc<"boards"> | null = await ctx.db.get(currentBoardId);
-            if (!board) break;
+            
+            if (!board || board.userId !== userId) {
+                return null;
+            }
             
             ancestors.unshift(board);
             currentBoardId = board.parentId;
@@ -100,9 +109,20 @@ export const getChildren = query({
 
 export const getById = query({
     args: { boardId: v.id("boards") },
-    
     handler: async (ctx, args) => {
-        return await ctx.db.get(args.boardId);
+        const userId = await getAuthUserId(ctx);
+        
+        if (!userId) {
+            return null;
+        }
+
+        const board = await ctx.db.get(args.boardId);
+
+        if (!board || board.userId !== userId) {
+            return null;
+        }
+
+        return board;
     },
 });
 
@@ -132,6 +152,27 @@ export const deleteBoard = mutation({
         }
 
         async function deleteRecursively(boardId: Id<"boards">) {
+            // Delete project cover if exists
+            const cover = await ctx.db
+                .query("projectCovers")
+                .filter((q) => q.eq(q.field("boardId"), boardId))
+                .first();
+
+            const referenceImages = await ctx.db
+                .query("referenceImages")
+                .filter((q) => q.eq(q.field("boardId"), boardId))
+                .collect();
+
+            for (const image of referenceImages) {
+                await ctx.storage.delete(image.storageId);
+                await ctx.db.delete(image._id);
+            }
+
+            if (cover) {
+                await ctx.storage.delete(cover.storageId);
+                await ctx.db.delete(cover._id);
+            }
+
             const children = await ctx.db
                 .query("boards")
                 .filter((q) => q.eq(q.field("parentId"), boardId))

@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGetBoard } from "../api/useGetBoard";
 import { useUploadProjectCover } from "../api/useUploadProjectCover";
+import { Loader } from "lucide-react";
 
 const CreateBoardModal = () => {
     const [boardName, setBoardName] = useState('');
     const [imageFile, setImageFile] = useState<File | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [open, setOpen] = useCreateBoardModal();
     const { mutate, isPending } = useCreateBoard();
     const { mutate: uploadCover } = useUploadProjectCover();
@@ -34,6 +36,10 @@ const CreateBoardModal = () => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
+        if (isSubmitting) return; // Prevent multiple submissions
+        
+        setIsSubmitting(true); // Set submitting state
+        
         try {
             const newBoardId = await mutate({
                 name: boardName, 
@@ -52,6 +58,8 @@ const CreateBoardModal = () => {
             handleClose();
         } catch (error) {
             toast.error('Failed to create board');
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -90,15 +98,17 @@ const CreateBoardModal = () => {
                         </div>
                     )}
 
-                    <div className="flex justify-end">
-                        <Button 
-                            disabled={isPending} 
-                            className="hover:bg-[#3a3a3a] bg-[#3a3a3a] text-gray-300" 
-                            type="submit"
+                <div className="flex justify-end">
+                    <Button 
+                        disabled={isPending || isSubmitting}
+                        className="hover:bg-[#3a3a3a] bg-[#3a3a3a] text-gray-300" 
+                        type="submit"
                         >
-                            Create
-                        </Button>
-                    </div>
+                        {isSubmitting ? (
+                            <Loader className="w-5 h-5 animate-spin" />
+                        ) : 'Create'}
+                    </Button>
+                </div>
                 </form>
             </DialogContent>
         </Dialog>
