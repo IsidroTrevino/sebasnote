@@ -9,11 +9,15 @@ import { Input } from "@/components/ui/input";
 import { useGetBoard } from "../api/useGetBoard";
 import { useUploadProjectCover } from "../api/useUploadProjectCover";
 import { Loader } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 
 const CreateBoardModal = () => {
     const [boardName, setBoardName] = useState('');
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [boardType, setBoardType] = useState<'cards' | 'document'>('cards');
     const [open, setOpen] = useCreateBoardModal();
     const { mutate, isPending } = useCreateBoard();
     const { mutate: uploadCover } = useUploadProjectCover();
@@ -36,15 +40,16 @@ const CreateBoardModal = () => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
-        if (isSubmitting) return; // Prevent multiple submissions
+        if (isSubmitting) return;
         
-        setIsSubmitting(true); // Set submitting state
+        setIsSubmitting(true);
         
         try {
             const newBoardId = await mutate({
                 name: boardName, 
                 parentId: boardId, 
-                isHome: false
+                isHome: false,
+                isDocument: boardType === 'document'
             });
 
             if (isParentHome && imageFile && newBoardId) {
@@ -67,11 +72,9 @@ const CreateBoardModal = () => {
         <Dialog open={open} onOpenChange={() => handleClose()}>
             <DialogContent className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a]">
                 <DialogHeader>
-                    <DialogTitle>
-                        Add a board
-                    </DialogTitle>
+                    <DialogTitle>Add a board</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     <Input 
                         className="bg-[#4a4a4a] border-[#3a3a3a] focus:border-[#2a2a2a] text-gray-300" 
                         value={boardName} 
@@ -83,12 +86,28 @@ const CreateBoardModal = () => {
                         maxLength={80} 
                         placeholder="e.g. Characters"
                     />
-                    
+
+                    <div className="space-y-4">
+                        <Label>Board Type</Label>
+                        <RadioGroup 
+                            value={boardType} 
+                            onValueChange={(value) => setBoardType(value as 'cards' | 'document')}
+                            className="flex gap-4"
+                        >
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="cards" id="cards" />
+                                <Label htmlFor="cards">Cards</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="document" id="document" />
+                                <Label htmlFor="document">Document</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+
                     {isParentHome && (
                         <div className="space-y-2">
-                            <label className="text-sm text-gray-400">
-                                Project Cover Image
-                            </label>
+                            <Label>Project Cover Image</Label>
                             <Input 
                                 type="file"
                                 accept="image/*"
@@ -98,17 +117,15 @@ const CreateBoardModal = () => {
                         </div>
                     )}
 
-                <div className="flex justify-end">
-                    <Button 
-                        disabled={isPending || isSubmitting}
-                        className="hover:bg-[#3a3a3a] bg-[#3a3a3a] text-gray-300" 
-                        type="submit"
+                    <div className="flex justify-end">
+                        <Button 
+                            disabled={isPending} 
+                            type="submit"
+                            className="bg-[#3a3a3a] hover:bg-[#4a4a4a]"
                         >
-                        {isSubmitting ? (
-                            <Loader className="w-5 h-5 animate-spin" />
-                        ) : 'Create'}
-                    </Button>
-                </div>
+                            Create
+                        </Button>
+                    </div>
                 </form>
             </DialogContent>
         </Dialog>

@@ -33,11 +33,12 @@ export const create = mutation({
     args: {
         name: v.string(),
         parentId: v.optional(v.id("boards")), 
-        isHome: v.optional(v.boolean())
+        isHome: v.optional(v.boolean()),
+        isDocument: v.optional(v.boolean())
     },
     handler: async (ctx, args) => {
         const userId = await getAuthUserId(ctx);
-        
+
         if (!userId) {
             throw new Error("Not authenticated");
         }
@@ -48,7 +49,8 @@ export const create = mutation({
             parentId: args.parentId,
             createdAt: Date.now(),
             updatedAt: Date.now(),
-            isHome: args.isHome ?? false
+            isHome: args.isHome ?? false,
+            isDocument: args.isDocument ?? false
         });
     },
 });

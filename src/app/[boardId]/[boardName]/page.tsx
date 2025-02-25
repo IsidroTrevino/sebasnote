@@ -4,12 +4,16 @@ import { useGetBoard } from "@/features/boards/api/useGetBoard";
 import { useBoardId } from "@/features/boards/api/useBoardId";
 import { useGetChildren } from "@/features/boards/api/useGetChildren";
 import { BoardCard } from "@/components/boardCard";
-import { Loader } from "lucide-react";
+import { Loader, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useCreateCardModal } from "@/features/cards/store/useCreateCardModal";
 
 export default function BoardPage() {
     const boardId = useBoardId();
+    const [,setOpen] = useCreateCardModal();
     const board = useGetBoard({ id: boardId });
     const { boards: children, isLoading: isLoadingChildren } = useGetChildren(boardId);
     const router = useRouter();
@@ -37,9 +41,20 @@ export default function BoardPage() {
         );
     }
 
-    if (!board?.isHome) {
+    if (!board.isHome) {
         return (
-            <div className="h-screen w-full bg-[#1a1a1a]">
+            <div className="h-screen w-full bg-[#1a1a1a] relative">
+                {!board.isDocument && (
+                    <div className="absolute top-4 right-4">
+                        <Button 
+                            onClick={() => setOpen(true)}
+                            className="bg-[#2a2a2a] hover:bg-[#4a4a4a]"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Card
+                        </Button>
+                    </div>
+                )}
             </div>
         );
     }

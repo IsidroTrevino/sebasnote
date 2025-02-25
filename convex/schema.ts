@@ -9,6 +9,7 @@ const schema = defineSchema({
         userId: v.string(),
         parentId: v.optional(v.id("boards")),
         isHome: v.boolean(),
+        isDocument: v.boolean(),
         createdAt: v.number(),
         updatedAt: v.number()
     }),
@@ -28,7 +29,21 @@ const schema = defineSchema({
         title: v.optional(v.string()),
         description: v.optional(v.string()),
         createdAt: v.number()
-    }).index("by_board", ["boardId"])
+    }).index("by_board", ["boardId"]),
+
+    cards: defineTable({
+        boardId: v.id("boards"),
+        userId: v.string(),
+        content: v.string(),
+        position: v.object({
+          x: v.number(),
+          y: v.number(),
+          width: v.number(),
+          height: v.number(),
+        }),
+        createdAt: v.number(),
+        updatedAt: v.number()
+      }).index("by_board", ["boardId"])
 });
 
 export default schema;
