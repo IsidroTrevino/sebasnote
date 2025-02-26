@@ -1,3 +1,4 @@
+// Update src/components/referenceImages.tsx
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { BoardType } from "@/features/types/boardType";
@@ -7,6 +8,7 @@ import { useDeleteReferenceImage } from "@/features/boards/api/useDeleteReferenc
 import { toast } from "sonner";
 import { useState } from "react";
 import { Id } from "../../convex/_generated/dataModel";
+import { useImageDialog } from "@/features/boards/store/useImageDialog";
 
 interface ReferenceImagesGridProps {
     board: BoardType;
@@ -16,8 +18,10 @@ export const ReferenceImages = ({ board }: ReferenceImagesGridProps) => {
     const images = useQuery(api.referenceImages.getByBoardId, { boardId: board._id });
     const { mutate: deleteImage } = useDeleteReferenceImage();
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const { open: openImageDialog } = useImageDialog(); // Add this hook
+    
     const handleDelete = async (imageId: Id<"referenceImages">, e: React.MouseEvent) => {
-        e.stopPropagation();
+        e.stopPropagation(); // Prevent opening the dialog when delete is clicked
         if (deletingId) return;
 
         try {
@@ -45,6 +49,7 @@ export const ReferenceImages = ({ board }: ReferenceImagesGridProps) => {
                 <div 
                     key={image._id} 
                     className="group relative aspect-square cursor-pointer"
+                    onClick={() => openImageDialog(image.url || '')} // Add onClick handler
                 >
                     <Image
                         src={image.url || ''}

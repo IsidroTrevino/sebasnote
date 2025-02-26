@@ -86,11 +86,6 @@ export default function BoardPage() {
   // Home board view
   return (
     <div className="flex flex-col h-screen w-screen p-6 bg-[#1a1a1a]">
-      <div className="flex justify-end w-full mb-4">
-        <Button className="mr-2" onClick={() => setCreateCardOpen(true)}>
-          <Plus className="mr-2 h-4 w-4"/> Add Board
-        </Button>
-      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 flex-grow">
         {children?.map((board) => (
           <BoardCard 
