@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useCreateCard } from "../api/useCreateCard";
@@ -123,6 +123,25 @@ export const CreateCardModal = () => {
   const { mutate: createCard, isPending } = useCreateCard();
   const [open, setOpen] = useCreateCardModal();
   const boardId = useBoardId();
+  const [hasDraft, setHasDraft] = useState(false);
+
+  const getDraftKey = () => `sebasnote-card-draft-${boardId}`;
+  
+  useEffect(() => {
+    if (open && boardId) {
+      const savedDraft = localStorage.getItem(getDraftKey());
+      if (savedDraft) {
+        setContent(savedDraft);
+        setHasDraft(true);
+      }
+    }
+  }, [open, boardId]);
+  
+  useEffect(() => {
+    if (open && boardId && content) {
+      localStorage.setItem(getDraftKey(), content);
+    }
+  }, [content, open, boardId]);
 
   const editor = useEditor({
     extensions: [
@@ -151,9 +170,20 @@ export const CreateCardModal = () => {
     },
   });
 
+  useEffect(() => {
+    if (editor && hasDraft && content) {
+      editor.commands.setContent(content);
+      setHasDraft(false);
+    }
+  }, [editor, hasDraft, content]);
+
+  const clearDraft = () => {
+    if (boardId) {
+      localStorage.removeItem(getDraftKey());
+    }
+  };
+
   const handleClose = () => {
-    editor?.commands.clearContent();
-    setContent("");
     setOpen(false);
   };
 
@@ -171,10 +201,20 @@ export const CreateCardModal = () => {
         height: 200,
       });
       toast.success("Card created");
-      handleClose();
+      editor?.commands.clearContent();
+      setContent("");
+      clearDraft();
+      setOpen(false);
     } catch {
       toast.error("Failed to create card");
     }
+  };
+
+  const handleDiscard = () => {
+    editor?.commands.clearContent();
+    setContent("");
+    clearDraft();
+    setOpen(false);
   };
 
   return (
@@ -229,7 +269,14 @@ export const CreateCardModal = () => {
             `}</style>
             <EditorContent editor={editor} />
           </div>
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-between pt-2">
+            <Button
+              variant="outline"
+              onClick={handleDiscard}
+              className="bg-transparent border-[#3a3a3a] hover:bg-[#3a3a3a] text-gray-300"
+            >
+              Discard
+            </Button>
             <Button
               disabled={isPending}
               onClick={handleCreate}
