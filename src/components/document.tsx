@@ -204,7 +204,7 @@ export const Document = ({ boardId, initialContent = '' }: DocumentProps) => {
     },
   });
 
-  const debouncedSave = useMemo(
+  const debouncedSave = useMemo(() => 
     debounce(async (newContent: string) => {
       try {
         setIsSaving(true);
