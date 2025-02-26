@@ -29,6 +29,7 @@ export const getHome = query({
     }
 });
   
+// Add this to your create mutation in convex/boards.ts
 export const create = mutation({
     args: {
         name: v.string(),
@@ -43,6 +44,19 @@ export const create = mutation({
             throw new Error("Not authenticated");
         }
 
+        let order = 0;
+        if (args.parentId) {
+            const siblings = await ctx.db
+                .query("boards")
+                .filter((q) => q.eq(q.field("parentId"), args.parentId))
+                .collect();
+            
+            if (siblings.length > 0) {
+                const maxOrder = Math.max(...siblings.map(b => b.order ?? 0));
+                order = maxOrder + 10;
+            }
+        }
+
         return await ctx.db.insert("boards", {
             name: args.name,
             userId,
@@ -50,7 +64,8 @@ export const create = mutation({
             createdAt: Date.now(),
             updatedAt: Date.now(),
             isHome: args.isHome ?? false,
-            isDocument: args.isDocument ?? false
+            isDocument: args.isDocument ?? false,
+            order: order
         });
     },
 });
@@ -102,10 +117,12 @@ export const getChildren = query({
                 q.eq(q.field("parentId"), undefined)
                 );
 
-        return await ctx.db
+        const boards = await ctx.db
             .query("boards")
             .filter(filter)
             .collect();
+            
+        return boards.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     }
 });
 
@@ -209,3 +226,36 @@ export const deleteBoard = mutation({
         return args.boardId;
     }
 });
+
+export const updateOrder = mutation({
+    args: {
+      updates: v.array(
+        v.object({
+          id: v.id("boards"),
+          order: v.number(),
+        })
+      ),
+    },
+    handler: async (ctx, args) => {
+      const userId = await getAuthUserId(ctx);
+      if (!userId) {
+        throw new Error("Not authenticated");
+      }
+  
+      for (const update of args.updates) {
+        const board = await ctx.db.get(update.id);
+        if (!board || board.userId !== userId) {
+          throw new Error("Board not found or unauthorized");
+        }
+      }
+  
+      for (const update of args.updates) {
+        await ctx.db.patch(update.id, {
+          order: update.order,
+          updatedAt: Date.now()
+        });
+      }
+  
+      return args.updates.length;
+    },
+  });
