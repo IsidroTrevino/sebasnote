@@ -40,6 +40,14 @@ const schema = defineSchema({
         createdAt: v.number(),
         updatedAt: v.number()
     }).index("by_board", ["boardId"]),
+
+    documents: defineTable({
+        boardId: v.id("boards"),
+        userId: v.string(),
+        content: v.string(),
+        createdAt: v.number(),
+        updatedAt: v.number()
+    }).index("by_board", ["boardId"]),
 });
 
 export default schema;
