@@ -15,7 +15,7 @@ export const LogInScreen = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const [pending, setPending] = useState(false);
+    const [, setPending] = useState(false);
 
     const handleProviderLogin = async (provider: "github" | "google") => {
         try {

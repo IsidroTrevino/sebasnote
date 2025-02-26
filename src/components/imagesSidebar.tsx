@@ -1,5 +1,5 @@
 import { BoardType } from "@/features/types/boardType";
-import { Ellipsis, Loader, Plus } from "lucide-react";
+import { Loader, Plus } from "lucide-react";
 import { ReferenceImages } from "./referenceImages";
 import { useReferenceImageModal } from "@/features/boards/store/useUploadImageModal";
 

@@ -90,7 +90,7 @@ const CreateBoardModal = () => {
 
                     <RadioGroup 
                         defaultValue="Document"
-                        onValueChange={(value) => setIsDocument(value === "Document")} // Update state on change
+                        onValueChange={(value) => setIsDocument(value === "Document")}
                     >
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="Document" id="r1" />

@@ -1,4 +1,3 @@
-// Update src/components/referenceImages.tsx
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { BoardType } from "@/features/types/boardType";
