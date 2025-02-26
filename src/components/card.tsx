@@ -3,7 +3,9 @@ import { Doc } from "../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Loader } from "lucide-react";
+import { Loader, Trash2 } from "lucide-react";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 interface CardProps {
   card: Doc<"cards">;
@@ -14,10 +16,31 @@ export const Card = ({ card }: CardProps) => {
   const [height, setHeight] = useState(card.height || 200);
   const [isResizing, setIsResizing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const startResizeRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const updateCard = useMutation(api.cards.update);
+  const deleteCard = useMutation(api.cards.deleteCard);
 
+  const originalDims = useRef({ width: card.width || 300, height: card.height || 200 });
+
+  useEffect(() => {
+    setWidth(card.width || 300);
+    setHeight(card.height || 200);
+    originalDims.current = { width: card.width || 300, height: card.height || 200 };
+  }, [card.width, card.height]);
+
+  // Store current dimensions in refs for event handlers
+  const widthRef = useRef(width);
+  const heightRef = useRef(height);
+  
+  // Update refs when state changes
+  useEffect(() => {
+    widthRef.current = width;
+    heightRef.current = height;
+  }, [width, height]);
+  
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
@@ -26,8 +49,8 @@ export const Card = ({ card }: CardProps) => {
       startResizeRef.current = {
         x: e.clientX,
         y: e.clientY,
-        width,
-        height
+        width: widthRef.current,
+        height: heightRef.current
       };
     }
 
@@ -55,21 +78,48 @@ export const Card = ({ card }: CardProps) => {
     document.removeEventListener('mouseup', handleMouseUp);
     setIsResizing(false);
     
-    // Save the new dimensions to the database
     try {
-      setIsSaving(true);
-      await updateCard({
-        id: card._id,
-        width,
-        height
-      });
+      if (widthRef.current !== originalDims.current.width || heightRef.current !== originalDims.current.height) {
+        setIsSaving(true);
+        await updateCard({
+          id: card._id,
+          width: widthRef.current,
+          height: heightRef.current
+        });
+        originalDims.current = { width: widthRef.current, height: heightRef.current };
+      }
     } catch (error) {
       console.error("Failed to update card dimensions:", error);
-      // Revert to original dimensions if update fails
-      setWidth(card.width || 300);
-      setHeight(card.height || 200);
+      setWidth(originalDims.current.width);
+      setHeight(originalDims.current.height);
+      toast.error("Failed to resize card");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Clean up event listeners if component unmounts during resize
+  useEffect(() => {
+    return () => {
+      if (isResizing) {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      }
+    };
+  }, [isResizing]);
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isDeleting) return;
+    
+    try {
+      setIsDeleting(true);
+      await deleteCard({ id: card._id });
+      toast.success("Card deleted");
+    } catch (error) {
+      console.error("Failed to delete card:", error);
+      toast.error("Failed to delete card");
+      setIsDeleting(false);
     }
   };
 
@@ -82,7 +132,31 @@ export const Card = ({ card }: CardProps) => {
         height: `${height}px`,
         cursor: isResizing ? 'nwse-resize' : 'default'
       }}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
     >
+      {(isHovering || isDeleting) && (
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className={`
+            absolute top-2 right-2 
+            p-1.5 
+            rounded-full
+            bg-red-500/80
+            hover:bg-red-600 
+            transition-all
+            z-10
+            ${isDeleting ? 'cursor-not-allowed opacity-50' : ''}
+          `}
+        >
+          {isDeleting ? (
+            <Loader className="h-4 w-4 text-white animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4 text-white" />
+          )}
+        </button>
+      )}
       <div className="p-4 overflow-auto h-full">
         <style jsx global>{`
           .card-content p {
@@ -131,13 +205,11 @@ export const Card = ({ card }: CardProps) => {
         />
       </div>
       
-      {/* Resize handle */}
       <div 
         className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize bg-[#3a3a3a] hover:bg-[#4a4a4a] transition-colors"
         onMouseDown={handleMouseDown}
       />
       
-      {/* Loading indicator when saving */}
       {isSaving && (
         <div className="absolute top-2 right-2">
           <Loader className="h-4 w-4 animate-spin text-gray-400" />

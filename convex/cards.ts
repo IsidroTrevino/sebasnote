@@ -66,13 +66,11 @@ export const update = mutation({
       throw new Error("Not authenticated");
     }
 
-    // Get the card to verify ownership
     const card = await ctx.db.get(args.id);
     if (!card || card.userId !== userId) {
       throw new Error("Not authorized");
     }
 
-    // Update only the provided fields
     const updates: Partial<typeof card> = {};
     
     if (args.width !== undefined) updates.width = args.width;
@@ -82,6 +80,26 @@ export const update = mutation({
     updates.updatedAt = Date.now();
 
     await ctx.db.patch(args.id, updates);
+    return args.id;
+  },
+});
+
+export const deleteCard = mutation({
+  args: {
+    id: v.id("cards"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const card = await ctx.db.get(args.id);
+    if (!card || card.userId !== userId) {
+      throw new Error("Card not found or unauthorized");
+    }
+
+    await ctx.db.delete(args.id);
     return args.id;
   },
 });

@@ -154,7 +154,6 @@ export const deleteBoard = mutation({
         }
 
         async function deleteRecursively(boardId: Id<"boards">) {
-            // Delete project cover if exists
             const cover = await ctx.db
                 .query("projectCovers")
                 .filter((q) => q.eq(q.field("boardId"), boardId))
@@ -173,6 +172,24 @@ export const deleteBoard = mutation({
             if (cover) {
                 await ctx.storage.delete(cover.storageId);
                 await ctx.db.delete(cover._id);
+            }
+
+            const cards = await ctx.db
+                .query("cards")
+                .filter((q) => q.eq(q.field("boardId"), boardId))
+                .collect();
+                
+            for (const card of cards) {
+                await ctx.db.delete(card._id);
+            }
+            
+            const document = await ctx.db
+                .query("documents")
+                .filter((q) => q.eq(q.field("boardId"), boardId))
+                .first();
+                
+            if (document) {
+                await ctx.db.delete(document._id);
             }
 
             const children = await ctx.db
