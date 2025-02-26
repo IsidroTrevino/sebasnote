@@ -5,7 +5,7 @@ import { Id } from "../../../../convex/_generated/dataModel";
 
 type RequestType = {
     boardId: Id<"boards">;
-    content: any;
+    content: string;
     width?: number;
     height?: number;
 };

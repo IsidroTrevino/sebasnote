@@ -55,7 +55,7 @@ const UpdateBoardModal = () => {
         update(
             {name: boardName, boardId: boardId},
             {
-                onSuccess: (id) => {
+                onSuccess: () => {
                     toast.success('Board renamed successfully');
                     handleClose();
                 },

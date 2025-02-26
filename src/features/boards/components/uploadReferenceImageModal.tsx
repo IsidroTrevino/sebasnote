@@ -34,7 +34,7 @@ export const UploadReferenceImageModal = () => {
             });
             toast.success("Image uploaded successfully");
             handleClose();
-        } catch (error) {
+        } catch {
             toast.error("Failed to upload image");
         } finally {
             setIsSubmitting(false);

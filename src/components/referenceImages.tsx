@@ -17,17 +17,17 @@ export const ReferenceImages = ({ board }: ReferenceImagesGridProps) => {
     const images = useQuery(api.referenceImages.getByBoardId, { boardId: board._id });
     const { mutate: deleteImage } = useDeleteReferenceImage();
     const [deletingId, setDeletingId] = useState<string | null>(null);
-    const { open: openImageDialog } = useImageDialog(); // Add this hook
+    const { open: openImageDialog } = useImageDialog();
     
     const handleDelete = async (imageId: Id<"referenceImages">, e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent opening the dialog when delete is clicked
+        e.stopPropagation();
         if (deletingId) return;
 
         try {
             setDeletingId(imageId);
             await deleteImage(imageId);
             toast.success("Image deleted successfully");
-        } catch (error) {
+        } catch {
             toast.error("Failed to delete image");
         } finally {
             setDeletingId(null);
@@ -48,7 +48,7 @@ export const ReferenceImages = ({ board }: ReferenceImagesGridProps) => {
                 <div 
                     key={image._id} 
                     className="group relative aspect-square cursor-pointer"
-                    onClick={() => openImageDialog(image.url || '')} // Add onClick handler
+                    onClick={() => openImageDialog(image.url || '')}
                 >
                     <Image
                         src={image.url || ''}

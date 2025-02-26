@@ -1,7 +1,7 @@
 
 import { BoardType } from "@/features/types/boardType";
 import BoardItem from "./boardItem";
-import { Ellipsis, Loader, LucideDotSquare, Plus } from "lucide-react";
+import { Ellipsis, Loader, Plus } from "lucide-react";
 import { useGetChildren } from "@/features/boards/api/useGetChildren";
 import { useCreateBoardModal } from "@/features/boards/store/useCreateBoardModal";
 import { useUpdateBoardModal } from "@/features/boards/store/useUpdateBoardModal";

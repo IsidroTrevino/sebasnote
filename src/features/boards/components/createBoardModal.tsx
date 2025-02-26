@@ -60,7 +60,7 @@ const CreateBoardModal = () => {
 
             toast.success('Board created successfully');
             handleClose();
-        } catch (error) {
+        } catch {
             toast.error('Failed to create board');
         } finally {
             setIsSubmitting(false);

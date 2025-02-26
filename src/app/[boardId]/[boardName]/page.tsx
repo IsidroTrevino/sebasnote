@@ -67,7 +67,7 @@ export default function BoardPage() {
                 </div>
               ) : cards.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-400">No cards yet. Click "Add Card" to create one.</p>
+                  <p className="text-gray-400">No cards yet. Click &quot;Add Card&quot; to create one.</p>
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-6 p-4">

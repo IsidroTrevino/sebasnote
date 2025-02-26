@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -204,7 +204,7 @@ export const Document = ({ boardId, initialContent = '' }: DocumentProps) => {
     },
   });
 
-  const debouncedSave = React.useCallback(
+  const debouncedSave = useMemo(
     debounce(async (newContent: string) => {
       try {
         setIsSaving(true);
