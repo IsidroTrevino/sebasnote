@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { useGetBoard } from "../api/useGetBoard";
 import { useUploadProjectCover } from "../api/useUploadProjectCover";
 import { Loader } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const CreateBoardModal = () => {
     const [boardName, setBoardName] = useState('');
@@ -20,6 +22,7 @@ const CreateBoardModal = () => {
     const boardId = useBoardId();
     const parent = useGetBoard({ id: boardId });
     const isParentHome = parent?.isHome === true;
+    const [isDocument, setIsDocument] = useState(true);
 
     const handleClose = () => {
         setBoardName('');
@@ -36,15 +39,16 @@ const CreateBoardModal = () => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
-        if (isSubmitting) return; // Prevent multiple submissions
+        if (isSubmitting) return;
         
-        setIsSubmitting(true); // Set submitting state
+        setIsSubmitting(true);
         
         try {
             const newBoardId = await mutate({
                 name: boardName, 
                 parentId: boardId, 
-                isHome: false
+                isHome: false,
+                isDocument: isDocument
             });
 
             if (isParentHome && imageFile && newBoardId) {
@@ -83,6 +87,20 @@ const CreateBoardModal = () => {
                         maxLength={80} 
                         placeholder="e.g. Characters"
                     />
+
+                    <RadioGroup 
+                        defaultValue="Document"
+                        onValueChange={(value) => setIsDocument(value === "Document")} // Update state on change
+                    >
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Document" id="r1" />
+                            <Label htmlFor="r1">Document</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Card" id="r2" />
+                            <Label htmlFor="r2">Card</Label>
+                        </div>
+                    </RadioGroup>
                     
                     {isParentHome && (
                         <div className="space-y-2">

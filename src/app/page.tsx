@@ -22,7 +22,8 @@ export default function Home() {
             const response = await mutate({
               name: "Home",
               parentId: undefined,
-              isHome: true
+              isHome: true,
+              isDocument: false
             });
             const newBoard = response as unknown as BoardType;
             
@@ -44,8 +45,8 @@ export default function Home() {
   if(isBoardsLoading || isUserLoading) {
     return (
       <div className="flex items-center justify-center h-full w-full bg-[#1a1a1a] text-gray-200">
-      <Loader className="size-8 animate-spin text-muted-foreground"/>
-    </div>
+        <Loader className="size-8 animate-spin text-muted-foreground"/>
+      </div>
     );
   }
 }
