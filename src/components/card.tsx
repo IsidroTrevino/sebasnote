@@ -3,9 +3,11 @@ import { Doc } from "../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Loader, Trash2 } from "lucide-react";
+import { Loader, Pencil, Trash2 } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { useUpdateCardModal } from "@/features/boards/store/useUpdateCardModal";
+
 
 interface CardProps {
   card: Doc<"cards">;
@@ -22,6 +24,8 @@ export const Card = ({ card }: CardProps) => {
   const startResizeRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const updateCard = useMutation(api.cards.update);
   const deleteCard = useMutation(api.cards.deleteCard);
+  const { onOpen } = useUpdateCardModal();
+
 
   const originalDims = useRef({ width: card.width || 300, height: card.height || 200 });
 
@@ -136,26 +140,46 @@ export const Card = ({ card }: CardProps) => {
       onMouseLeave={() => setIsHovering(false)}
     >
       {(isHovering || isDeleting) && (
-        <button
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className={`
-            absolute top-2 right-2 
-            p-1.5 
-            rounded-full
-            bg-red-500/80
-            hover:bg-red-600 
-            transition-all
-            z-10
-            ${isDeleting ? 'cursor-not-allowed opacity-50' : ''}
-          `}
-        >
-          {isDeleting ? (
-            <Loader className="h-4 w-4 text-white animate-spin" />
-          ) : (
-            <Trash2 className="h-4 w-4 text-white" />
-          )}
-        </button>
+        <>
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className={`
+              absolute top-2 right-2 
+              p-1.5 
+              rounded-full
+              bg-red-500/80
+              hover:bg-red-600 
+              transition-all
+              z-10
+              ${isDeleting ? 'cursor-not-allowed opacity-50' : ''}
+            `}
+          >
+            {isDeleting ? (
+              <Loader className="h-4 w-4 text-white animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4 text-white" />
+            )}
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen(card);
+            }}
+            className={`
+              absolute top-2 right-10
+              p-1.5 
+              rounded-full
+              bg-blue-500/80
+              hover:bg-blue-600 
+              transition-all
+              z-10
+            `}
+          >
+            <Pencil className="h-4 w-4 text-white" />
+          </button>
+        </>
       )}
       <div className="p-4 overflow-auto h-full">
         <style jsx global>{`

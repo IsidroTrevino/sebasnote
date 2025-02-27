@@ -6,6 +6,7 @@ import UpdateBoardModal from "@/features/boards/components/updateBoardModal";
 import { UploadReferenceImageModal } from "@/features/boards/components/uploadReferenceImageModal";
 import { CreateCardModal } from "@/features/boards/components/createCardModal";
 import { ImageDialog } from "./imageDialog";
+import { UpdateCardModal } from "@/features/boards/components/updateCardModal";
 
 export const Modals = () => {
     const [mounted, setMounted] = useState(false);
@@ -20,6 +21,7 @@ export const Modals = () => {
     
     return (
         <>
+            <UpdateCardModal/>
             <ImageDialog/>
             <CreateCardModal/>
             <UploadReferenceImageModal/>
