@@ -18,6 +18,19 @@ export const ReferenceImages = ({ board }: ReferenceImagesGridProps) => {
     const { mutate: deleteImage } = useDeleteReferenceImage();
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const { open: openImageDialog } = useImageDialog();
+
+    const getImageName = (url?: string | null, title?: string | null): string => {
+        const t = (title || "").trim();
+        if (t) return t;
+        const u = (url || "").split("?")[0];
+        const parts = u.split("/");
+        const last = parts[parts.length - 1] || "image";
+        try {
+            return decodeURIComponent(last);
+        } catch {
+            return last;
+        }
+    };
     
     const handleDelete = async (imageId: Id<"referenceImages">, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -49,15 +62,20 @@ export const ReferenceImages = ({ board }: ReferenceImagesGridProps) => {
                     key={image._id} 
                     className="group relative aspect-square cursor-pointer"
                     onClick={() => openImageDialog(image.url || '')}
+                    title={getImageName(image.url || '', image.title || '')}
+                    aria-label={getImageName(image.url || '', image.title || '')}
                 >
                     <Image
                         src={image.url || ''}
                         fill
                         className="object-cover rounded-md"
-                        alt="Reference image"
+                        alt={getImageName(image.url || '', image.title || '')}
                     />
                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all rounded-md" />
-                    
+                    <div className="absolute bottom-1 left-1 z-10 max-w-[85%] truncate px-2 py-0.5 rounded bg-black/60 text-white text-[11px] leading-tight opacity-0 group-hover:opacity-100 transition-all pointer-events-none">
+                        {getImageName(image.url || "", image.title || "")}
+                    </div>
+
                     <button
                         onClick={(e) => handleDelete(image._id, e)}
                         disabled={deletingId === image._id}

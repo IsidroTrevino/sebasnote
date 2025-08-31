@@ -3,9 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
 import { useListAllBoards } from "@/features/boards/api/useListAllBoards";
+import { useImageDialog } from "@/features/boards/store/useImageDialog";
 import { toast } from "sonner";
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -25,10 +27,11 @@ import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import FontFamily from '@tiptap/extension-font-family';
 import FontSize from '@/lib/tiptap/fontSize';
-import { BoldIcon, Loader, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListIcon, Heading1, Heading2, Heading3, Code, QuoteIcon, Link2, X, Palette, TextCursorInput, Type, HighlighterIcon } from "lucide-react";
+import { BoldIcon, Loader, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListIcon, Heading1, Heading2, Heading3, Code, QuoteIcon, Link2, X, Palette, TextCursorInput, Type, HighlighterIcon, Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
 import { useUpdateCardModal } from "../store/useUpdateCardModal";
 
-const MenuBar = ({ editor }: { editor: Editor | null }) => {
+const MenuBar = ({ editor, boardId }: { editor: Editor | null; boardId: Id<'boards'> | null }) => {
   const { boards } = useListAllBoards();
   const [search, setSearch] = useState('');
   const filteredBoards = (boards ?? []).filter((b) =>
@@ -40,6 +43,11 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
   const [openFont, setOpenFont] = useState(false);
   const [openSize, setOpenSize] = useState(false);
   const [openLink, setOpenLink] = useState(false);
+
+  const referenceImages = useQuery(
+    api.referenceImages.getByBoardId,
+    boardId ? { boardId } : "skip"
+  ) || [];
 
   if (!editor) return null;
 
@@ -58,6 +66,19 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
   const applyFontSize = (size: string) => {
     if (!editor) return;
     editor.chain().focus().setFontSize(size).run();
+  };
+
+  const getImageName = (url?: string | null, title?: string | null): string => {
+    const t = (title || "").trim();
+    if (t) return t;
+    const u = (url || "").split("?")[0];
+    const parts = u.split("/");
+    const last = parts[parts.length - 1] || "image";
+    try {
+      return decodeURIComponent(last);
+    } catch {
+      return last;
+    }
   };
 
   return (
@@ -304,6 +325,69 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Reference image link */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
+            aria-label="Insert reference image link"
+            title="Insert reference image link"
+          >
+            <ImageIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-72 p-2 max-h-72 overflow-auto">
+          {referenceImages.length === 0 ? (
+            <div className="px-2 py-1.5 text-sm text-muted-foreground">No reference images</div>
+          ) : (
+            referenceImages.map((img) => (
+              <DropdownMenuItem
+                key={img._id}
+                onSelect={(e: Event) => {
+                  e.preventDefault();
+                  if (!editor) return;
+                  const label = getImageName(img.url, img.title);
+                  const href = `#image:${encodeURIComponent(img.url || '')}`;
+                  const { selection } = editor.state;
+                  const isEmpty = selection.empty;
+
+                  if (isEmpty) {
+                    editor
+                      .chain()
+                      .focus()
+                      .insertContent({
+                        type: 'text',
+                        text: label,
+                        marks: [{ type: 'link', attrs: { href } }],
+                      })
+                      .run();
+                  } else {
+                    editor
+                      .chain()
+                      .focus()
+                      .extendMarkRange('link')
+                      .setLink({ href })
+                      .run();
+                  }
+                }}
+                className="flex items-center gap-2"
+                title={getImageName(img.url, img.title)}
+              >
+                <Image
+                  src={img.url || ''}
+                  alt={getImageName(img.url, img.title)}
+                  width={24}
+                  height={24}
+                  className="h-6 w-6 object-cover rounded"
+                />
+                <span className="truncate">{getImageName(img.url, img.title)}</span>
+              </DropdownMenuItem>
+            ))
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       {/* Existing Link control */}
       <DropdownMenu open={openLink} onOpenChange={(o) => { setOpenLink(o); if (o) { setOpenColor(false); setOpenHighlight(false); setOpenFont(false); setOpenSize(false); } }}>
         <DropdownMenuTrigger asChild>
@@ -381,6 +465,7 @@ export const UpdateCardModal = () => {
   const [content, setContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const updateCard = useMutation(api.cards.update);
+  const { open: openImageDialog } = useImageDialog();
   
   const editor = useEditor({
     extensions: [
@@ -431,6 +516,110 @@ export const UpdateCardModal = () => {
       setContent(card.content as string);
     }
   }, [editor, card]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const el = editor.view.dom as HTMLElement;
+
+    let previewEl: HTMLDivElement | null = null;
+
+    const removePreview = () => {
+      if (previewEl && previewEl.parentNode) {
+        previewEl.parentNode.removeChild(previewEl);
+      }
+      previewEl = null;
+    };
+
+    const createPreview = (url: string) => {
+      removePreview();
+      previewEl = document.createElement('div');
+      previewEl.style.position = 'fixed';
+      previewEl.style.pointerEvents = 'none';
+      previewEl.style.zIndex = '9999';
+      previewEl.style.padding = '4px';
+      previewEl.style.background = 'rgba(0,0,0,0.7)';
+      previewEl.style.borderRadius = '6px';
+      previewEl.style.border = '1px solid #3a3a3a';
+      const img = document.createElement('img');
+      img.src = url;
+      img.style.maxWidth = '200px';
+      img.style.maxHeight = '140px';
+      img.style.display = 'block';
+      img.style.borderRadius = '4px';
+      previewEl.appendChild(img);
+      document.body.appendChild(previewEl);
+    };
+
+    const getRefImageUrl = (href: string) => {
+      if (!href) return null;
+      if (href.startsWith('#image:')) {
+        try {
+          return decodeURIComponent(href.slice(7));
+        } catch {
+          return href.slice(7);
+        }
+      }
+      return null;
+    };
+
+    const onClick = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+      const href = anchor?.getAttribute('href') || '';
+      const refUrl = getRefImageUrl(href);
+
+      if (anchor && refUrl) {
+        e.preventDefault();
+        openImageDialog(refUrl);
+      }
+    };
+
+    const onMouseOver = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+      const href = anchor?.getAttribute('href') || '';
+      const refUrl = getRefImageUrl(href);
+      if (anchor && refUrl) {
+        createPreview(refUrl);
+      }
+    };
+
+    const onMouseOut = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+      const href = anchor?.getAttribute('href') || '';
+      const refUrl = getRefImageUrl(href);
+      if (anchor && refUrl) {
+        removePreview();
+      }
+    };
+
+    const onMouseMove = (e: Event) => {
+      const me = e as MouseEvent;
+      if (previewEl) {
+        const offset = 16;
+        let x = me.clientX + offset;
+        let y = me.clientY + offset;
+        if (x + 220 > window.innerWidth) x = me.clientX - 220;
+        if (y + 160 > window.innerHeight) y = me.clientY - 160;
+        previewEl.style.left = `${x}px`;
+        previewEl.style.top = `${y}px`;
+      }
+    };
+
+    el.addEventListener('click', onClick);
+    el.addEventListener('mouseover', onMouseOver);
+    el.addEventListener('mouseout', onMouseOut);
+    el.addEventListener('mousemove', onMouseMove);
+
+    return () => {
+      el.removeEventListener('click', onClick);
+      el.removeEventListener('mouseover', onMouseOver);
+      el.removeEventListener('mouseout', onMouseOut);
+      el.removeEventListener('mousemove', onMouseMove);
+      removePreview();
+    };
+  }, [editor, openImageDialog]);
   
   const handleClose = () => {
     onClose();
@@ -471,7 +660,7 @@ export const UpdateCardModal = () => {
           <DialogTitle>Edit card</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 overflow-y-auto pr-2">
-          <MenuBar editor={editor} />
+          <MenuBar editor={editor} boardId={card?.boardId ?? null} />
           <div className="min-h-[150px] max-h-[50vh] bg-[#1a1a1a] p-4 rounded-lg overflow-y-auto">
             <style jsx global>{`
               .ProseMirror p {

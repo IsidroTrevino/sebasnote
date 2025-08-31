@@ -7,6 +7,7 @@ import { Loader, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useUpdateCardModal } from "@/features/boards/store/useUpdateCardModal";
+import { useImageDialog } from "@/features/boards/store/useImageDialog";
 
 
 interface CardProps {
@@ -26,6 +27,7 @@ export const Card = ({ card }: CardProps) => {
   const deleteCard = useMutation(api.cards.deleteCard);
   const { onOpen } = useUpdateCardModal();
   const router = useRouter();
+  const { open: openImageDialog } = useImageDialog();
 
 
   const originalDims = useRef({ width: card.width || 300, height: card.height || 200 });
@@ -113,26 +115,118 @@ export const Card = ({ card }: CardProps) => {
     };
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
-  // Intercept link clicks inside card content for client-side navigation
+  // Intercept link clicks and handle reference-image previews in card content
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
-    const handler = (e: Event) => {
+
+    let previewEl: HTMLDivElement | null = null;
+
+    const removePreview = () => {
+      if (previewEl && previewEl.parentNode) {
+        previewEl.parentNode.removeChild(previewEl);
+      }
+      previewEl = null;
+    };
+
+    const createPreview = (url: string) => {
+      removePreview();
+      previewEl = document.createElement('div');
+      previewEl.style.position = 'fixed';
+      previewEl.style.pointerEvents = 'none';
+      previewEl.style.zIndex = '9999';
+      previewEl.style.padding = '4px';
+      previewEl.style.background = 'rgba(0,0,0,0.7)';
+      previewEl.style.borderRadius = '6px';
+      previewEl.style.border = '1px solid #3a3a3a';
+      const img = document.createElement('img');
+      img.src = url;
+      img.style.maxWidth = '200px';
+      img.style.maxHeight = '140px';
+      img.style.display = 'block';
+      img.style.borderRadius = '4px';
+      previewEl.appendChild(img);
+      document.body.appendChild(previewEl);
+    };
+
+    const getRefImageUrl = (href: string) => {
+      if (!href) return null;
+      if (href.startsWith('#image:')) {
+        try {
+          return decodeURIComponent(href.slice(7));
+        } catch {
+          return href.slice(7);
+        }
+      }
+      return null;
+    };
+
+    const onClick = (e: Event) => {
       const me = e as MouseEvent;
       const target = e.target as HTMLElement;
       const anchor = target.closest('a') as HTMLAnchorElement | null;
       const href = anchor?.getAttribute('href') || '';
       const hasMod = me.metaKey || me.ctrlKey;
+      const refUrl = getRefImageUrl(href);
+
+      if (anchor && refUrl) {
+        e.preventDefault();
+        openImageDialog(refUrl);
+        return;
+      }
+
       if (anchor && href.startsWith('/') && hasMod) {
         e.preventDefault();
         router.push(href);
       }
     };
-    el.addEventListener('click', handler);
-    return () => {
-      el.removeEventListener('click', handler);
+
+    const onMouseOver = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+      const href = anchor?.getAttribute('href') || '';
+      const refUrl = getRefImageUrl(href);
+      if (anchor && refUrl) {
+        createPreview(refUrl);
+      }
     };
-  }, [router]);
+
+    const onMouseOut = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+      const href = anchor?.getAttribute('href') || '';
+      const refUrl = getRefImageUrl(href);
+      if (anchor && refUrl) {
+        removePreview();
+      }
+    };
+
+    const onMouseMove = (e: Event) => {
+      const me = e as MouseEvent;
+      if (previewEl) {
+        const offset = 16;
+        let x = me.clientX + offset;
+        let y = me.clientY + offset;
+        if (x + 220 > window.innerWidth) x = me.clientX - 220;
+        if (y + 160 > window.innerHeight) y = me.clientY - 160;
+        previewEl.style.left = `${x}px`;
+        previewEl.style.top = `${y}px`;
+      }
+    };
+
+    el.addEventListener('click', onClick);
+    el.addEventListener('mouseover', onMouseOver);
+    el.addEventListener('mouseout', onMouseOut);
+    el.addEventListener('mousemove', onMouseMove);
+
+    return () => {
+      el.removeEventListener('click', onClick);
+      el.removeEventListener('mouseover', onMouseOver);
+      el.removeEventListener('mouseout', onMouseOut);
+      el.removeEventListener('mousemove', onMouseMove);
+      removePreview();
+    };
+  }, [router, openImageDialog]);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
