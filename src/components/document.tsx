@@ -11,6 +11,10 @@ import Strike from '@tiptap/extension-strike';
 import Highlight from '@tiptap/extension-highlight';
 import TextAlign from '@tiptap/extension-text-align';
 import Link from '@tiptap/extension-link';
+import TextStyle from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import FontFamily from '@tiptap/extension-font-family';
+import FontSize from '@/lib/tiptap/fontSize';
 
 import { useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
@@ -32,6 +36,9 @@ import {
   ListIcon,
   Link2,
   X,
+  Palette,
+  TextCursorInput,
+  Type,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { debounce } from 'lodash';
@@ -57,6 +64,13 @@ const MenuBar = ({
     [linkableBoards, search]
   );
   if (!editor) return null;
+
+  const hexToRgba = (hex: string, alpha = 0.35) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
 
   return (
     <div className="border-b border-[#3a3a3a] bg-[#2a2a2a] p-2 sticky top-0 z-10 rounded-t-md flex flex-wrap items-center gap-1">
@@ -96,15 +110,41 @@ const MenuBar = ({
       >
         <StrikethroughIcon className="h-4 w-4" />
       </Button>
-      <Button
-        size="icon"
-        variant="outline"
-        onClick={() => editor.chain().focus().toggleHighlight().run()}
-        disabled={!editor.can().chain().focus().toggleHighlight().run()}
-        className={`h-8 w-8 ${editor.isActive('highlight') ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
-      >
-        <HighlighterIcon className="h-4 w-4" />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
+          >
+            <HighlighterIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56 p-2">
+          <div className="grid grid-cols-6 gap-2 mb-2">
+            <button className="h-4 w-4 rounded bg-[rgba(253,230,138,0.35)]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setHighlight({ color: 'rgba(253,230,138,0.35)' }).run(); }} />
+            <button className="h-4 w-4 rounded bg-[rgba(187,247,208,0.35)]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setHighlight({ color: 'rgba(187,247,208,0.35)' }).run(); }} />
+            <button className="h-4 w-4 rounded bg-[rgba(191,219,254,0.35)]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setHighlight({ color: 'rgba(191,219,254,0.35)' }).run(); }} />
+            <button className="h-4 w-4 rounded bg-[rgba(254,202,202,0.35)]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setHighlight({ color: 'rgba(254,202,202,0.35)' }).run(); }} />
+            <button className="h-4 w-4 rounded bg-[rgba(221,214,254,0.35)]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setHighlight({ color: 'rgba(221,214,254,0.35)' }).run(); }} />
+            <button className="h-4 w-4 rounded bg-[rgba(251,207,232,0.35)]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setHighlight({ color: 'rgba(251,207,232,0.35)' }).run(); }} />
+          </div>
+          <Input
+            type="color"
+            className="h-8 w-full bg-[#1a1a1a] border-[#3a3a3a]"
+            onChange={(e) => editor?.chain().focus().setHighlight({ color: hexToRgba(e.target.value, 0.35) }).run()}
+            aria-label="Pick highlight color"
+          />
+          <div className="mt-2">
+            <Button
+              variant="outline"
+              className="h-8 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a] w-full"
+              onClick={() => editor?.chain().focus().unsetHighlight().run()}
+            >
+              Clear highlight
+            </Button>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <div className="h-6 border-l border-[#3a3a3a] mx-1" />
 
@@ -186,6 +226,129 @@ const MenuBar = ({
 
       <div className="h-6 border-l border-[#3a3a3a] mx-1" />
 
+      {/* Typography controls */}
+      <div className="h-6 border-l border-[#3a3a3a] mx-1" />
+
+      {/* Font family */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
+          >
+            <Type className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56 p-1">
+          <DropdownMenuItem
+            onSelect={(e: Event) => {
+              e.preventDefault();
+              editor?.chain().focus().setFontFamily('Courier New').run();
+            }}
+          >
+            <span style={{ fontFamily: 'Courier New' }}>Courier New</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(e: Event) => {
+              e.preventDefault();
+              editor?.chain().focus().setFontFamily('Georgia').run();
+            }}
+          >
+            <span style={{ fontFamily: 'Georgia' }}>Georgia</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(e: Event) => {
+              e.preventDefault();
+              editor?.chain().focus().setFontFamily('EB Garamond').run();
+            }}
+          >
+            <span style={{ fontFamily: 'EB Garamond' }}>EB Garamond</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(e: Event) => {
+              e.preventDefault();
+              editor?.chain().focus().setFontFamily('Lexend').run();
+            }}
+          >
+            <span style={{ fontFamily: 'Lexend' }}>Lexend</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(e: Event) => {
+              e.preventDefault();
+              editor?.chain().focus().setFontFamily('Impact').run();
+            }}
+          >
+            <span style={{ fontFamily: 'Impact' }}>Impact</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Font size */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
+          >
+            <TextCursorInput className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-44 p-1">
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('12px').run(); }}>12 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('14px').run(); }}>14 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('16px').run(); }}>16 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('18px').run(); }}>18 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('20px').run(); }}>20 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('24px').run(); }}>24 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('28px').run(); }}>28 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('32px').run(); }}>32 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('36px').run(); }}>36 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('40px').run(); }}>40 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('48px').run(); }}>48 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('60px').run(); }}>60 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); editor?.chain().focus().setFontSize('72px').run(); }}>72 px</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Text color */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
+          >
+            <Palette className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56 p-2">
+          <div className="grid grid-cols-6 gap-2 mb-2">
+            <button className="h-4 w-4 rounded-full bg-[#e5e7eb]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setColor('#e5e7eb').run(); }} />
+            <button className="h-4 w-4 rounded-full bg-[#f87171]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setColor('#f87171').run(); }} />
+            <button className="h-4 w-4 rounded-full bg-[#60a5fa]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setColor('#60a5fa').run(); }} />
+            <button className="h-4 w-4 rounded-full bg-[#34d399]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setColor('#34d399').run(); }} />
+            <button className="h-4 w-4 rounded-full bg-[#fbbf24]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setColor('#fbbf24').run(); }} />
+            <button className="h-4 w-4 rounded-full bg-[#a78bfa]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setColor('#a78bfa').run(); }} />
+          </div>
+          <Input
+            type="color"
+            className="h-8 w-full bg-[#1a1a1a] border-[#3a3a3a]"
+            onChange={(e) => editor?.chain().focus().setColor(e.target.value).run()}
+            aria-label="Pick text color"
+          />
+          <div className="mt-2">
+            <Button
+              variant="outline"
+              className="h-8 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a] w-full"
+              onClick={() => editor?.chain().focus().unsetColor().run()}
+            >
+              Clear text color
+            </Button>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+
+      {/* Existing Link control */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -193,7 +356,6 @@ const MenuBar = ({
             className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
           >
             <Link2 className="h-4 w-4" />
-            Link to board
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-64 p-2">
@@ -248,8 +410,7 @@ const MenuBar = ({
       <Button
         size="icon"
         variant="ghost"
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        onClick={() => (editor as any)?.chain().focus().extendMarkRange('link').unsetLink().run()}
+        onClick={() => editor?.chain().focus().extendMarkRange('link').unsetLink().run()}
         className="h-8 w-8 text-gray-400 hover:text-gray-200 hover:bg-[#2a2a2a]"
         aria-label="Remove link"
       >
@@ -281,7 +442,13 @@ export const Document = ({ boardId, initialContent = '' }: DocumentProps) => {
       Italic,
       Underline,
       Strike,
-      Highlight,
+      TextStyle,
+      Color,
+      FontFamily,
+      FontSize,
+      Highlight.configure({
+        multicolor: true,
+      }),
       Blockquote,
       Heading,
       ListItem,
@@ -410,10 +577,6 @@ export const Document = ({ boardId, initialContent = '' }: DocumentProps) => {
             }
             .ProseMirror p[style*='text-align: left'] {
               text-align: left;
-            }
-            .ProseMirror mark {
-              background-color: rgba(255, 255, 0, 0.3);
-              color: white;
             }
             .ProseMirror a {
               color: #60a5fa;

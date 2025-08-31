@@ -18,7 +18,12 @@ import Strike from '@tiptap/extension-strike';
 import CodeBlock from '@tiptap/extension-code-block';
 import Blockquote from '@tiptap/extension-blockquote';
 import Link from '@tiptap/extension-link';
-import { BoldIcon, Loader, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListIcon, Heading1, Heading2, Heading3, Code, QuoteIcon, Link2, X } from "lucide-react";
+import TextStyle from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import Highlight from '@tiptap/extension-highlight';
+import FontFamily from '@tiptap/extension-font-family';
+import FontSize from '@/lib/tiptap/fontSize';
+import { BoldIcon, Loader, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListIcon, Heading1, Heading2, Heading3, Code, QuoteIcon, Link2, X, Palette, TextCursorInput, Type, HighlighterIcon } from "lucide-react";
 import { useCreateCardModal } from "../store/useCreateCardModal";
 import { useBoardId } from "@/features/boards/api/useBoardId";
 import { useListAllBoards } from "@/features/boards/api/useListAllBoards";
@@ -26,11 +31,34 @@ import { useListAllBoards } from "@/features/boards/api/useListAllBoards";
 const MenuBar = ({ editor }: { editor: Editor | null }) => {
   const { boards } = useListAllBoards();
   const [search, setSearch] = useState('');
+  const [openColor, setOpenColor] = useState(false);
+  const [openHighlight, setOpenHighlight] = useState(false);
+  const [openFont, setOpenFont] = useState(false);
+  const [openSize, setOpenSize] = useState(false);
+  const [openLink, setOpenLink] = useState(false);
 
   if (!editor) return null;
+
+  const hexToRgba = (hex: string, alpha = 0.35) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
   const filteredBoards = (boards ?? []).filter((b) =>
     (b.name || '').toLowerCase().includes(search.toLowerCase())
   );
+
+  const applyFontFamily = (family: string) => {
+    if (!editor) return;
+    editor.chain().focus().setFontFamily(family).run();
+  };
+
+  const applyFontSize = (size: string) => {
+    if (!editor) return;
+    editor.chain().focus().setFontSize(size).run();
+  };
 
   return (
     <div className="flex flex-wrap gap-2 mb-2">
@@ -127,14 +155,170 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
 
       <div className="h-6 border-l border-[#3a3a3a] mx-1" />
 
-      <DropdownMenu>
+      {/* Typography controls */}
+      {/* Font family */}
+      <DropdownMenu open={openFont} onOpenChange={(o) => { setOpenFont(o); if (o) { setOpenSize(false); setOpenColor(false); setOpenHighlight(false); setOpenLink(false); } }}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
+          >
+            <Type className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56 p-1">
+          <DropdownMenuItem
+            onSelect={(e: Event) => {
+              e.preventDefault();
+              applyFontFamily('Courier New');
+            }}
+          >
+            <span style={{ fontFamily: 'Courier New' }}>Courier New</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(e: Event) => {
+              e.preventDefault();
+              applyFontFamily('Georgia');
+            }}
+          >
+            <span style={{ fontFamily: 'Georgia' }}>Georgia</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(e: Event) => {
+              e.preventDefault();
+              applyFontFamily('EB Garamond');
+            }}
+          >
+            <span style={{ fontFamily: 'EB Garamond' }}>EB Garamond</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(e: Event) => {
+              e.preventDefault();
+              applyFontFamily('Lexend');
+            }}
+          >
+            <span style={{ fontFamily: 'Lexend' }}>Lexend</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(e: Event) => {
+              e.preventDefault();
+              applyFontFamily('Impact');
+            }}
+          >
+            <span style={{ fontFamily: 'Impact' }}>Impact</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Font size */}
+      <DropdownMenu open={openSize} onOpenChange={(o) => { setOpenSize(o); if (o) { setOpenFont(false); setOpenColor(false); setOpenHighlight(false); setOpenLink(false); } }}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
+          >
+            <TextCursorInput className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-44 p-1">
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('12px'); }}>12 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('14px'); }}>14 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('16px'); }}>16 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('18px'); }}>18 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('20px'); }}>20 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('24px'); }}>24 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('28px'); }}>28 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('32px'); }}>32 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('36px'); }}>36 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('40px'); }}>40 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('48px'); }}>48 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('60px'); }}>60 px</DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e: Event) => { e.preventDefault(); applyFontSize('72px'); }}>72 px</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Text color */}
+      <DropdownMenu open={openColor} onOpenChange={(o) => { setOpenColor(o); if (o) { setOpenHighlight(false); setOpenFont(false); setOpenSize(false); setOpenLink(false); } }}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
+          >
+            <Palette className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56 p-2">
+          <div className="grid grid-cols-6 gap-2 mb-2">
+            <button className="h-4 w-4 rounded-full bg-[#e5e7eb]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setColor('#e5e7eb').run(); }} />
+            <button className="h-4 w-4 rounded-full bg-[#f87171]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setColor('#f87171').run(); }} />
+            <button className="h-4 w-4 rounded-full bg-[#60a5fa]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setColor('#60a5fa').run(); }} />
+            <button className="h-4 w-4 rounded-full bg-[#34d399]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setColor('#34d399').run(); }} />
+            <button className="h-4 w-4 rounded-full bg-[#fbbf24]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setColor('#fbbf24').run(); }} />
+            <button className="h-4 w-4 rounded-full bg-[#a78bfa]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setColor('#a78bfa').run(); }} />
+          </div>
+          <Input
+            type="color"
+            className="h-8 w-full bg-[#1a1a1a] border-[#3a3a3a]"
+            onChange={(e) => editor?.chain().focus().setColor(e.target.value).run()}
+            aria-label="Pick text color"
+          />
+          <div className="mt-2">
+            <Button
+              variant="outline"
+              className="h-8 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a] w-full"
+              onClick={() => editor?.chain().focus().unsetColor().run()}
+            >
+              Clear text color
+            </Button>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Highlight color */}
+      <DropdownMenu open={openHighlight} onOpenChange={(o) => { setOpenHighlight(o); if (o) { setOpenColor(false); setOpenFont(false); setOpenSize(false); setOpenLink(false); } }}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
+          >
+            <HighlighterIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56 p-2">
+          <div className="grid grid-cols-6 gap-2 mb-2">
+            <button className="h-4 w-4 rounded bg-[rgba(253,230,138,0.35)]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setHighlight({ color: 'rgba(253,230,138,0.35)' }).run(); }} />
+            <button className="h-4 w-4 rounded bg-[rgba(187,247,208,0.35)]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setHighlight({ color: 'rgba(187,247,208,0.35)' }).run(); }} />
+            <button className="h-4 w-4 rounded bg-[rgba(191,219,254,0.35)]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setHighlight({ color: 'rgba(191,219,254,0.35)' }).run(); }} />
+            <button className="h-4 w-4 rounded bg-[rgba(254,202,202,0.35)]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setHighlight({ color: 'rgba(254,202,202,0.35)' }).run(); }} />
+            <button className="h-4 w-4 rounded bg-[rgba(221,214,254,0.35)]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setHighlight({ color: 'rgba(221,214,254,0.35)' }).run(); }} />
+            <button className="h-4 w-4 rounded bg-[rgba(251,207,232,0.35)]" onClick={(e) => { e.preventDefault(); editor?.chain().focus().setHighlight({ color: 'rgba(251,207,232,0.35)' }).run(); }} />
+          </div>
+          <Input
+            type="color"
+            className="h-8 w-full bg-[#1a1a1a] border-[#3a3a3a]"
+            onChange={(e) => editor?.chain().focus().setHighlight({ color: hexToRgba(e.target.value, 0.35) }).run()}
+            aria-label="Pick highlight color"
+          />
+          <div className="mt-2">
+            <Button
+              variant="outline"
+              className="h-8 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a] w-full"
+              onClick={() => editor?.chain().focus().unsetHighlight().run()}
+            >
+              Clear highlight
+            </Button>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Existing Link control */}
+      <DropdownMenu open={openLink} onOpenChange={(o) => { setOpenLink(o); if (o) { setOpenColor(false); setOpenHighlight(false); setOpenFont(false); setOpenSize(false); } }}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
             className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
           >
             <Link2 className="h-4 w-4" />
-            Link to board
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-64 p-2">
@@ -237,6 +421,13 @@ export const CreateCardModal = () => {
       ListItem,
       Underline,
       Strike,
+      TextStyle,
+      Color,
+      FontFamily,
+      FontSize,
+      Highlight.configure({
+        multicolor: true,
+      }),
       CodeBlock,
       Blockquote,
       Link.configure({
@@ -299,12 +490,6 @@ export const CreateCardModal = () => {
     }
   };
 
-  const handleDiscard = () => {
-    editor?.commands.clearContent();
-    setContent("");
-    clearDraft();
-    setOpen(false);
-  };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -359,13 +544,12 @@ export const CreateCardModal = () => {
             <EditorContent editor={editor} />
           </div>
           <div className="flex justify-between pt-2">
-            <Button
-              variant="outline"
-              onClick={handleDiscard}
-              className="bg-transparent border-[#3a3a3a] hover:bg-[#3a3a3a] text-gray-300"
-            >
-              Discard
-            </Button>
+          <Button
+            variant="outline"
+            className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
+          >
+            <Link2 className="h-4 w-4" />
+          </Button>
             <Button
               disabled={isPending}
               onClick={handleCreate}

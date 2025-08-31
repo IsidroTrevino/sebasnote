@@ -1,10 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Doc } from "../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Loader, Pencil, Trash2 } from "lucide-react";
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useUpdateCardModal } from "@/features/boards/store/useUpdateCardModal";
@@ -64,33 +63,33 @@ export const Card = ({ card }: CardProps) => {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isResizing || !startResizeRef.current) return;
-    
+
     const deltaX = e.clientX - startResizeRef.current.x;
     const deltaY = e.clientY - startResizeRef.current.y;
-    
+
     const newWidth = Math.max(200, startResizeRef.current.width + deltaX);
     const newHeight = Math.max(150, startResizeRef.current.height + deltaY);
-    
+
     setWidth(newWidth);
     setHeight(newHeight);
-  };
+  }, [isResizing]);
 
-  const handleMouseUp = async () => {
+  const handleMouseUp = useCallback(async () => {
     if (!isResizing) return;
-    
+
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
     setIsResizing(false);
-    
+
     try {
       if (widthRef.current !== originalDims.current.width || heightRef.current !== originalDims.current.height) {
         setIsSaving(true);
         await updateCard({
           id: card._id,
           width: widthRef.current,
-          height: heightRef.current
+          height: heightRef.current,
         });
         originalDims.current = { width: widthRef.current, height: heightRef.current };
       }
@@ -102,7 +101,7 @@ export const Card = ({ card }: CardProps) => {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [isResizing, updateCard, card._id, handleMouseMove]);
 
   // Clean up event listeners if component unmounts during resize
   useEffect(() => {
