@@ -126,6 +126,23 @@ export const getChildren = query({
     }
 });
 
+export const listAll = query({
+    args: {},
+    handler: async (ctx) => {
+        const userId = await getAuthUserId(ctx);
+        if (!userId) {
+            return [];
+        }
+
+        const boards = await ctx.db
+            .query("boards")
+            .filter((q) => q.eq(q.field("userId"), userId))
+            .collect();
+
+        return boards.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    },
+});
+
 export const getById = query({
     args: { boardId: v.id("boards") },
     handler: async (ctx, args) => {

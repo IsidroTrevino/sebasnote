@@ -56,7 +56,10 @@ export default function BoardPage() {
         ) : (
           <>
             <div className="flex justify-end p-4 w-full">
-              <Button className="mr-4 mt-4" onClick={() => setCreateCardOpen(true)}>
+              <Button
+                className="mr-4 mt-4 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-gray-200 border border-[#3a3a3a]"
+                onClick={() => setCreateCardOpen(true)}
+              >
                 <Plus className="mr-2 h-4 w-4"/> Add Card
               </Button>
             </div>

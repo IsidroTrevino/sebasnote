@@ -44,7 +44,7 @@ const BoardSidebar = ({ board }: BoardSidebarProps) => {
     } else if (!fetchedChildren && children === undefined) {
       setChildren([]);
     }
-  }, [fetchedChildren, hasReordered]);
+  }, [fetchedChildren, hasReordered, children]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

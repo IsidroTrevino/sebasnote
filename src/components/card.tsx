@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Loader, Pencil, Trash2 } from "lucide-react";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useUpdateCardModal } from "@/features/boards/store/useUpdateCardModal";
 
@@ -25,6 +26,7 @@ export const Card = ({ card }: CardProps) => {
   const updateCard = useMutation(api.cards.update);
   const deleteCard = useMutation(api.cards.deleteCard);
   const { onOpen } = useUpdateCardModal();
+  const router = useRouter();
 
 
   const originalDims = useRef({ width: card.width || 300, height: card.height || 200 });
@@ -110,7 +112,28 @@ export const Card = ({ card }: CardProps) => {
         document.removeEventListener('mouseup', handleMouseUp);
       }
     };
-  }, [isResizing]);
+  }, [isResizing, handleMouseMove, handleMouseUp]);
+
+  // Intercept link clicks inside card content for client-side navigation
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const handler = (e: Event) => {
+      const me = e as MouseEvent;
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+      const href = anchor?.getAttribute('href') || '';
+      const hasMod = me.metaKey || me.ctrlKey;
+      if (anchor && href.startsWith('/') && hasMod) {
+        e.preventDefault();
+        router.push(href);
+      }
+    };
+    el.addEventListener('click', handler);
+    return () => {
+      el.removeEventListener('click', handler);
+    };
+  }, [router]);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -221,6 +244,10 @@ export const Card = ({ card }: CardProps) => {
             padding: 0.75em 1em;
             border-radius: 5px;
             margin: 0.5em 0;
+          }
+          .card-content a {
+            color: #60a5fa;
+            text-decoration: underline;
           }
         `}</style>
         <div 

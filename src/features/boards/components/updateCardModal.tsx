@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import { useListAllBoards } from "@/features/boards/api/useListAllBoards";
 import { toast } from "sonner";
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -16,10 +19,17 @@ import Underline from '@tiptap/extension-underline';
 import Strike from '@tiptap/extension-strike';
 import CodeBlock from '@tiptap/extension-code-block';
 import Blockquote from '@tiptap/extension-blockquote';
-import { BoldIcon, Loader, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListIcon, Heading1, Heading2, Heading3, Code, QuoteIcon } from "lucide-react";
+import Link from '@tiptap/extension-link';
+import { BoldIcon, Loader, ItalicIcon, UnderlineIcon, StrikethroughIcon, ListIcon, Heading1, Heading2, Heading3, Code, QuoteIcon, Link2, X } from "lucide-react";
 import { useUpdateCardModal } from "../store/useUpdateCardModal";
 
 const MenuBar = ({ editor }: { editor: Editor | null }) => {
+  const { boards } = useListAllBoards();
+  const [search, setSearch] = useState('');
+  const filteredBoards = (boards ?? []).filter((b) =>
+    (b.name || '').toLowerCase().includes(search.toLowerCase())
+  );
+
   if (!editor) return null;
 
   return (
@@ -107,6 +117,77 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
       >
         <QuoteIcon className="h-4 w-4" />
       </Button>
+
+      <div className="h-6 border-l border-[#3a3a3a] mx-1" />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
+          >
+            <Link2 className="h-4 w-4" />
+            Link to board
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-64 p-2">
+          <Input
+            placeholder="Search boards..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="mb-2 h-8 bg-[#1a1a1a] border-[#3a3a3a] text-gray-300 placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0"
+          />
+          {filteredBoards.length === 0 ? (
+            <div className="px-2 py-1.5 text-sm text-muted-foreground">No boards found</div>
+          ) : (
+            filteredBoards.map((b) => (
+              <DropdownMenuItem
+                key={b._id}
+                onSelect={(e: Event) => {
+                  e.preventDefault();
+                  if (!editor) return;
+                  const href = `/${b._id}/${encodeURIComponent(b.name)}`;
+                  const { selection } = editor.state;
+                  const isEmpty = selection.empty;
+
+                  if (isEmpty) {
+                    editor
+                      .chain()
+                      .focus()
+                      .insertContent({
+                        type: 'text',
+                        text: b.name,
+                        marks: [{ type: 'link', attrs: { href } }],
+                      })
+                      .run();
+                  } else {
+                    editor
+                      .chain()
+                      .focus()
+                      .extendMarkRange('link')
+                      .setLink({ href })
+                      .run();
+                  }
+                }}
+                className="truncate"
+                title={b.name}
+              >
+                {b.name}
+              </DropdownMenuItem>
+            ))
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Button
+        size="icon"
+        variant="ghost"
+        onClick={() => editor?.chain().focus().extendMarkRange('link').unsetLink().run()}
+        className="h-8 w-8 text-gray-400 hover:text-gray-200 hover:bg-[#2a2a2a]"
+        aria-label="Remove link"
+      >
+        <X className="h-4 w-4" />
+      </Button>
     </div>
   );
 };
@@ -132,6 +213,14 @@ export const UpdateCardModal = () => {
       Strike,
       CodeBlock,
       Blockquote,
+      Link.configure({
+        autolink: true,
+        linkOnPaste: true,
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-blue-400 underline hover:opacity-90',
+        },
+      }),
     ],
     content: '',
     onUpdate: ({ editor }) => {
@@ -249,7 +338,7 @@ export const UpdateCardModal = () => {
           </Button>
           <Button
             onClick={handleUpdate}
-            className="px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+            className="px-4 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 font-medium transition-colors border border-[#3a3a3a]"
             disabled={isSaving}
           >
             {isSaving ? (
