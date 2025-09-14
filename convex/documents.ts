@@ -51,3 +51,18 @@ export const update = mutation({
     });
   }
 });
+
+export const listAllBoards = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    
+    if (!userId) {
+      return [];
+    }
+
+    return await ctx.db
+      .query("boards")
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .collect();
+  }
+});
