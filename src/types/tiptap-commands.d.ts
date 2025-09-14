@@ -20,5 +20,9 @@ declare module '@tiptap/core' {
       setFontSize: (size: string) => ReturnType;
       unsetFontSize: () => ReturnType;
     };
+    image: {
+      setImage: (options: { src: string; alt?: string; title?: string }) => ReturnType;
+    };
+    setImage: (options: { src: string; alt?: string; title?: string }) => ReturnType;
   }
 }

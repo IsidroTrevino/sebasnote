@@ -1,43 +1,33 @@
-import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { query, mutation } from "./_generated/server";
+import { v } from "convex/values";
 
 export const get = query({
   args: { boardId: v.id("boards") },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
+
     if (!userId) {
       return null;
     }
 
-    const board = await ctx.db.get(args.boardId);
-    if (!board || board.userId !== userId) {
-      return null;
-    }
-
-    const document = await ctx.db
+    return await ctx.db
       .query("documents")
       .filter((q) => q.eq(q.field("boardId"), args.boardId))
       .first();
-    
-    return document;
   },
 });
 
 export const update = mutation({
-  args: {
+  args: { 
     boardId: v.id("boards"),
-    content: v.string(),
+    content: v.string()
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
+
     if (!userId) {
       throw new Error("Not authenticated");
-    }
-
-    const board = await ctx.db.get(args.boardId);
-    if (!board || board.userId !== userId) {
-      throw new Error("Not authorized");
     }
 
     const existingDoc = await ctx.db
@@ -46,19 +36,18 @@ export const update = mutation({
       .first();
 
     if (existingDoc) {
-      await ctx.db.patch(existingDoc._id, {
+      return await ctx.db.patch(existingDoc._id, {
         content: args.content,
-        updatedAt: Date.now(),
-      });
-      return existingDoc._id;
-    } else {
-      return await ctx.db.insert("documents", {
-        boardId: args.boardId,
-        userId,
-        content: args.content,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        updatedAt: Date.now()
       });
     }
-  },
+
+    return await ctx.db.insert("documents", {
+      boardId: args.boardId,
+      content: args.content,
+      userId,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+  }
 });
