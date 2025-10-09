@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, Loader, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RatingStars } from "./RatingStars";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 type DescPreviewProps = { text: string };
 const DescriptionPreview: React.FC<DescPreviewProps> = ({ text }) => {
@@ -127,7 +128,7 @@ export const SpotifySongList: React.FC = () => {
   }, []);
 
   const onEdit = useCallback(
-    (id: any, title?: string, currentRating?: number, currentDesc?: string) => {
+    (id: Id<"cards">, title?: string, currentRating?: number, currentDesc?: string) => {
       setUpdateModal({
         open: true,
         payload: {
@@ -142,7 +143,7 @@ export const SpotifySongList: React.FC = () => {
   );
 
   const onDelete = useCallback(
-    (id: any, title?: string, artist?: string) => {
+    (id: Id<"cards">, title?: string, artist?: string) => {
       setDeleteModal({
         open: true,
         payload: { id, title, artist },

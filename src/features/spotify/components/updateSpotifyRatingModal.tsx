@@ -25,7 +25,6 @@ export const UpdateSpotifyRatingModal: React.FC = () => {
       setRating(payload?.rating ?? 10);
       setRatingDescription(payload?.ratingDescription ?? "");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, payload?.rating, payload?.ratingDescription]);
 
   const canSubmit = useMemo(() => {
