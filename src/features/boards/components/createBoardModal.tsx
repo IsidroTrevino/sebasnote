@@ -23,6 +23,7 @@ const CreateBoardModal = () => {
     const parent = useGetBoard({ id: boardId });
     const isParentHome = parent?.isHome === true;
     const [isDocument, setIsDocument] = useState(true);
+    const [isSpotify, setIsSpotify] = useState(false);
 
     const handleClose = () => {
         setBoardName('');
@@ -48,7 +49,8 @@ const CreateBoardModal = () => {
                 name: boardName, 
                 parentId: boardId, 
                 isHome: false,
-                isDocument: isDocument
+                isDocument: isDocument,
+                isSpotify: isSpotify
             });
 
             if (isParentHome && imageFile && newBoardId) {
@@ -90,7 +92,10 @@ const CreateBoardModal = () => {
 
                     <RadioGroup 
                         defaultValue="Document"
-                        onValueChange={(value) => setIsDocument(value === "Document")}
+                        onValueChange={(value) => {
+                            setIsDocument(value === "Document");
+                            setIsSpotify(value === "Spotify");
+                        }}
                     >
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="Document" id="r1" />
@@ -98,7 +103,11 @@ const CreateBoardModal = () => {
                         </div>
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="Card" id="r2" />
-                            <Label htmlFor="r2">Card</Label>
+                            <Label htmlFor="r2">Card Grid</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Spotify" id="r3" />
+                            <Label htmlFor="r3">Spotify Songs</Label>
                         </div>
                     </RadioGroup>
                     

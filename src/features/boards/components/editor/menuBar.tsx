@@ -376,7 +376,6 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
             variant="outline"
             className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
             aria-label="Insert reference image"
-            title="Insert reference image"
           >
             <ImagePlusIcon className="h-4 w-4" />
           </Button>
@@ -420,7 +419,6 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
             variant="outline"
             className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
             aria-label="Insert reference image link"
-            title="Insert reference image link"
           >
             <ImageIcon className="h-4 w-4" />
           </Button>

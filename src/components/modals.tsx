@@ -7,6 +7,9 @@ import { UploadReferenceImageModal } from "@/features/boards/components/uploadRe
 import { CreateCardModal } from "@/features/boards/components/createCardModal";
 import { ImageDialog } from "./imageDialog";
 import { UpdateCardModal } from "@/features/boards/components/updateCardModal";
+import { CreateSpotifySongModal } from "@/features/spotify/components/createSpotifySongModal";
+import { UpdateSpotifyRatingModal } from "@/features/spotify/components/updateSpotifyRatingModal";
+import { DeleteSpotifySongModal } from "@/features/spotify/components/deleteSpotifySongModal";
 
 export const Modals = () => {
     const [mounted, setMounted] = useState(false);
@@ -24,6 +27,9 @@ export const Modals = () => {
             <UpdateCardModal/>
             <ImageDialog/>
             <CreateCardModal/>
+            <CreateSpotifySongModal/>
+            <UpdateSpotifyRatingModal/>
+            <DeleteSpotifySongModal/>
             <UploadReferenceImageModal/>
             <UpdateBoardModal/>
             <CreateBoardModal/>

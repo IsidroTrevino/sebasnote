@@ -10,6 +10,7 @@ const schema = defineSchema({
         parentId: v.optional(v.id("boards")),
         isHome: v.boolean(),
         isDocument: v.boolean(),
+        isSpotify: v.optional(v.boolean()),
         order: v.optional(v.number()),
         createdAt: v.number(),
         updatedAt: v.number()

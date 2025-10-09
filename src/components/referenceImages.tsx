@@ -62,7 +62,6 @@ export const ReferenceImages = ({ board }: ReferenceImagesGridProps) => {
                     key={image._id} 
                     className="group relative aspect-square cursor-pointer"
                     onClick={() => openImageDialog(image.url || '')}
-                    title={getImageName(image.url || '', image.title || '')}
                     aria-label={getImageName(image.url || '', image.title || '')}
                 >
                     <Image

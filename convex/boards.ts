@@ -35,7 +35,8 @@ export const create = mutation({
         name: v.string(),
         parentId: v.optional(v.id("boards")), 
         isHome: v.optional(v.boolean()),
-        isDocument: v.optional(v.boolean())
+        isDocument: v.optional(v.boolean()),
+        isSpotify: v.optional(v.boolean())
     },
     handler: async (ctx, args) => {
         const userId = await getAuthUserId(ctx);
@@ -65,6 +66,7 @@ export const create = mutation({
             updatedAt: Date.now(),
             isHome: args.isHome ?? false,
             isDocument: args.isDocument ?? false,
+            isSpotify: args.isSpotify ?? false,
             order: order
         });
     },

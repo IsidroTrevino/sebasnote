@@ -7,6 +7,7 @@ export type BoardType = {
     name: string;
     isHome: boolean;
     isDocument: boolean;
+    isSpotify?: boolean;
     userId: string;
     createdAt: number;
     updatedAt: number;
