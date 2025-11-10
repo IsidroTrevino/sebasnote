@@ -65,6 +65,8 @@ export const CreateSpotifySongModal = () => {
   const [coverUrl, setCoverUrl] = useState<string | undefined>(undefined);
 
   const [rating, setRating] = useState<number>(10);
+  const [ratingMin, setRatingMin] = useState<number>(0);
+  const [ratingMax, setRatingMax] = useState<number>(10);
   const [ratingDescription, setRatingDescription] = useState("");
   const [isFetching, setIsFetching] = useState(false);
 
@@ -76,6 +78,8 @@ export const CreateSpotifySongModal = () => {
     setDurationText("");
     setCoverUrl(undefined);
     setRating(10);
+    setRatingMin(0);
+    setRatingMax(10);
     setRatingDescription("");
     setIsFetching(false);
   }, []);
@@ -134,7 +138,9 @@ export const CreateSpotifySongModal = () => {
         boardId,
         title: title.trim(),
         artist: artist.trim(),
-        rating: Math.max(0, Math.min(10, Number(rating))),
+        rating: Math.max(ratingMin, Math.min(ratingMax, Number(rating))),
+        ratingMin,
+        ratingMax,
         ratingDescription: ratingDescription.trim() || undefined,
         durationMs: finalDuration,
         spotifyUrl: spotifyUrl || undefined,
@@ -254,32 +260,89 @@ export const CreateSpotifySongModal = () => {
             {/* Rating section */}
             <div className="space-y-3">
               <Label className="text-sm text-gray-400">Rating</Label>
+              
+              {/* Rating scale selector */}
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-xs text-gray-500">Custom Range:</span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={-10000}
+                    max={10000}
+                    value={ratingMin}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      if (!Number.isNaN(n)) {
+                        const newMin = Math.floor(n);
+                        setRatingMin(newMin);
+                        // Ensure rating is within new bounds
+                        if (rating < newMin) setRating(newMin);
+                        // Ensure max is still greater than min
+                        if (ratingMax <= newMin) setRatingMax(newMin + 1);
+                      }
+                    }}
+                    placeholder="Min"
+                    className="w-[80px] bg-[#0f0f0f] border-[#2a2a2a] text-gray-200 text-xs"
+                  />
+                  <span className="text-xs text-gray-500">to</span>
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={ratingMin + 1}
+                    max={10000}
+                    value={ratingMax}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      if (!Number.isNaN(n) && n > ratingMin) {
+                        const newMax = Math.floor(n);
+                        setRatingMax(newMax);
+                        // Ensure rating is within new bounds
+                        if (rating > newMax) setRating(newMax);
+                      }
+                    }}
+                    placeholder="Max"
+                    className="w-[80px] bg-[#0f0f0f] border-[#2a2a2a] text-gray-200 text-xs"
+                  />
+                </div>
+              </div>
+
               <div className="flex items-center gap-3">
                 <RatingStars
-                  value={rating}
+                  value={((rating - ratingMin) / (ratingMax - ratingMin)) * 10}
                   max={10}
                   size={20}
-                  onChange={(v) => setRating(Math.max(0, Math.min(10, Math.round(v * 100) / 100)))}
+                  onChange={(v) => {
+                    const percentage = v / 10;
+                    const range = ratingMax - ratingMin;
+                    const newRating = ratingMin + (percentage * range);
+                    setRating(Math.max(ratingMin, Math.min(ratingMax, Math.round(newRating * 100) / 100)));
+                  }}
                 />
                 <Input
                   type="number"
                   inputMode="decimal"
-                  min={0}
-                  max={10}
-                  step="0.01"
+                  min={ratingMin}
+                  max={ratingMax}
+                  step={ratingMax - ratingMin >= 100 ? "1" : "0.01"}
                   value={Number.isNaN(rating) ? "" : rating}
                   onChange={(e) => {
                     const n = Number(e.target.value);
                     if (!Number.isNaN(n)) {
-                      const clamped = Math.max(0, Math.min(10, n));
+                      const clamped = Math.max(ratingMin, Math.min(ratingMax, n));
                       setRating(Math.round(clamped * 100) / 100);
                     } else if (e.target.value === "") {
-                      setRating(0);
+                      setRating(ratingMin);
                     }
                   }}
                   className="w-[100px] bg-[#0f0f0f] border-[#2a2a2a] text-gray-200"
                 />
-                <span className="text-xs text-gray-500">{rating.toFixed(2)}</span>
+                <span className="text-xs text-gray-500">
+                  {ratingMax - ratingMin >= 100 ? rating.toFixed(0) : rating.toFixed(2)} / {ratingMax}
+                </span>
+                <span className="text-xs font-medium text-[#1DB954]">
+                  {(((rating - ratingMin) / (ratingMax - ratingMin)) * 100).toFixed(1)}%
+                </span>
               </div>
 
               <div className="space-y-2">

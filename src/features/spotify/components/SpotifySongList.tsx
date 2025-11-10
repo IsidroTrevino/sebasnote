@@ -14,9 +14,18 @@ import type { Id } from "../../../../convex/_generated/dataModel";
 type DescPreviewProps = { text: string };
 const DescriptionPreview: React.FC<DescPreviewProps> = ({ text }) => {
   const [visible, setVisible] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const elementRef = useRef<HTMLDivElement | null>(null);
 
   const onEnter = () => {
+    if (elementRef.current) {
+      const rect = elementRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+      });
+    }
     timerRef.current = setTimeout(() => setVisible(true), 2000);
   };
   const onLeave = () => {
@@ -28,8 +37,9 @@ const DescriptionPreview: React.FC<DescPreviewProps> = ({ text }) => {
   if (!text) return null;
 
   return (
-    <div className="relative">
+    <>
       <div
+        ref={elementRef}
         className="text-gray-500 text-xs truncate max-w-[360px]"
         onMouseEnter={onEnter}
         onMouseLeave={onLeave}
@@ -37,13 +47,18 @@ const DescriptionPreview: React.FC<DescPreviewProps> = ({ text }) => {
         {text}
       </div>
       {visible && (
-        <div className="absolute left-0 mt-2 z-50 max-w-[420px]">
+        <div
+          className="fixed z-[9999] max-w-[420px]"
+          style={{ top: `${position.top}px`, left: `${position.left}px` }}
+          onMouseEnter={onEnter}
+          onMouseLeave={onLeave}
+        >
           <div className="rounded-md border border-[#2f2f2f] bg-[#0f0f0f] text-gray-200 text-sm p-3 shadow-xl">
             <div className="whitespace-pre-wrap break-words">{text}</div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
@@ -128,13 +143,15 @@ export const SpotifySongList: React.FC = () => {
   }, []);
 
   const onEdit = useCallback(
-    (id: Id<"cards">, title?: string, currentRating?: number, currentDesc?: string) => {
+    (id: Id<"cards">, title?: string, currentRating?: number, currentMin?: number, currentMax?: number, currentDesc?: string) => {
       setUpdateModal({
         open: true,
         payload: {
           id,
           title,
           rating: currentRating,
+          ratingMin: currentMin,
+          ratingMax: currentMax,
           ratingDescription: currentDesc,
         },
       });
@@ -220,16 +237,24 @@ export const SpotifySongList: React.FC = () => {
                     {s.content.artist || "-"}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <RatingStars
-                        value={s.content.rating ?? 0}
-                        max={10}
-                        size={16}
-                        readOnly
-                        className="translate-y-[1px]"
-                      />
-                      <span className="text-gray-300 text-sm">
-                        {(s.content.rating ?? 0).toFixed(2)}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <RatingStars
+                          value={((s.content.rating ?? 0) - (s.content.ratingMin ?? 0)) / ((s.content.ratingMax ?? 10) - (s.content.ratingMin ?? 0)) * 10}
+                          max={10}
+                          size={16}
+                          readOnly
+                          className="translate-y-[1px]"
+                        />
+                        <span className="text-gray-300 text-sm">
+                          {(s.content.ratingMax ?? 10) - (s.content.ratingMin ?? 0) >= 100 
+                            ? (s.content.rating ?? 0).toFixed(0) 
+                            : (s.content.rating ?? 0).toFixed(2)
+                          }
+                        </span>
+                      </div>
+                      <span className="text-xs font-medium text-[#1DB954]">
+                        {(((s.content.rating ?? 0) - (s.content.ratingMin ?? 0)) / ((s.content.ratingMax ?? 10) - (s.content.ratingMin ?? 0)) * 100).toFixed(1)}%
                       </span>
                     </div>
                   </td>
@@ -254,7 +279,7 @@ export const SpotifySongList: React.FC = () => {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => onEdit(s._id, s.content.title, s.content.rating, s.content.ratingDescription)}
+                        onClick={() => onEdit(s._id, s.content.title, s.content.rating, s.content.ratingMin, s.content.ratingMax, s.content.ratingDescription)}
                         className="text-gray-300 hover:bg-[#2a2a2a]"
                       >
                         <Pencil className="w-4 h-4" />

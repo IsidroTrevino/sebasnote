@@ -9,6 +9,8 @@ import { getAuthUserId } from "@convex-dev/auth/server";
  *   title: string,
  *   artist: string,
  *   rating: number,
+ *   ratingMin: number (default 0),
+ *   ratingMax: number (default 10, can be 5, 10, 100, etc.),
  *   ratingDescription?: string,
  *   durationMs?: number,
  *   spotifyUrl?: string,
@@ -22,6 +24,8 @@ export const create = mutation({
     title: v.string(),
     artist: v.string(),
     rating: v.number(),
+    ratingMin: v.optional(v.number()),
+    ratingMax: v.optional(v.number()),
     ratingDescription: v.optional(v.string()),
     durationMs: v.optional(v.number()),
     spotifyUrl: v.optional(v.string()),
@@ -43,6 +47,8 @@ export const create = mutation({
       title: args.title,
       artist: args.artist,
       rating: args.rating,
+      ratingMin: args.ratingMin ?? 0,
+      ratingMax: args.ratingMax ?? 10,
       ratingDescription: args.ratingDescription,
       durationMs: args.durationMs,
       spotifyUrl: args.spotifyUrl,
@@ -113,6 +119,8 @@ export const updateRating = mutation({
   args: {
     id: v.id("cards"),
     rating: v.number(),
+    ratingMin: v.optional(v.number()),
+    ratingMax: v.optional(v.number()),
     ratingDescription: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -130,6 +138,8 @@ export const updateRating = mutation({
     const updated = {
       ...content,
       rating: args.rating,
+      ratingMin: args.ratingMin ?? content.ratingMin ?? 0,
+      ratingMax: args.ratingMax ?? content.ratingMax ?? 10,
       ratingDescription: args.ratingDescription,
     };
 

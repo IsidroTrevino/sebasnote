@@ -7,6 +7,8 @@ export type SpotifySongContent = {
   title: string;
   artist: string;
   rating: number;
+  ratingMin: number;
+  ratingMax: number;
   ratingDescription?: string;
   durationMs?: number;
   spotifyUrl?: string;

@@ -6,6 +6,8 @@ import { useCallback, useMemo, useState } from "react";
 type RequestType = {
   id: Id<"cards">;
   rating: number;
+  ratingMin?: number;
+  ratingMax?: number;
   ratingDescription?: string;
 };
 type ResponseType = Id<"cards"> | null;

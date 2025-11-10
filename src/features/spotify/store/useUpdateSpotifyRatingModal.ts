@@ -5,6 +5,8 @@ export type UpdateSpotifyRatingPayload = {
   id: Id<"cards">;
   title?: string;
   rating?: number;
+  ratingMin?: number;
+  ratingMax?: number;
   ratingDescription?: string;
 };
 
