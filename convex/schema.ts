@@ -39,9 +39,37 @@ const schema = defineSchema({
         content: v.any(), 
         width: v.optional(v.number()),
         height: v.optional(v.number()),
+        // Mind map properties
+        positionX: v.optional(v.number()),
+        positionY: v.optional(v.number()),
+        color: v.optional(v.string()),
+        fontSize: v.optional(v.number()),
+        linkedBoardId: v.optional(v.id("boards")),
+        linkedUrl: v.optional(v.string()),
+        linkedReferences: v.optional(v.array(v.object({
+            type: v.string(),
+            boardId: v.optional(v.id("boards")),
+            url: v.optional(v.string()),
+            name: v.optional(v.string()),
+            color: v.optional(v.string()),
+        }))),
+        categories: v.optional(v.array(v.string())),
         createdAt: v.number(),
         updatedAt: v.number()
     }).index("by_board", ["boardId"]),
+
+    // Connections between cards (arrows in mind map)
+    cardConnections: defineTable({
+        boardId: v.id("boards"),
+        userId: v.string(),
+        fromCardId: v.id("cards"),
+        toCardId: v.id("cards"),
+        label: v.optional(v.string()),
+        color: v.optional(v.string()),
+        createdAt: v.number()
+    }).index("by_board", ["boardId"])
+      .index("by_from_card", ["fromCardId"])
+      .index("by_to_card", ["toCardId"]),
 
     documents: defineTable({
         boardId: v.id("boards"),

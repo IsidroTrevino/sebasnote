@@ -43,6 +43,7 @@ interface MenuBarProps {
 
 export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
   const [search, setSearch] = useState('');
+  const [externalUrl, setExternalUrl] = useState('');
   const filteredBoards = useMemo(
     () => linkableBoards.filter((b) => b.name.toLowerCase().includes(search.toLowerCase())),
     [linkableBoards, search]
@@ -503,13 +504,34 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
             <Link2 className="h-4 w-4" />
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-64 p-2">
+        <DropdownMenuContent className="w-72 p-2">
             <Input
             placeholder="Search boards..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="mb-2 h-8 bg-[#1a1a1a] border-[#3a3a3a] text-gray-300 placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0"
             />
+            <div className="flex items-center gap-2 mb-2">
+              <Input
+                placeholder="Or paste external URL"
+                value={externalUrl}
+                onChange={(e) => setExternalUrl(e.target.value)}
+                className="flex-1 h-8 bg-[#1a1a1a] border-[#3a3a3a] text-gray-300 placeholder:text-gray-500"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (!externalUrl) return;
+                  editor.chain().focus().extendMarkRange('link')
+                    .setLink({ href: externalUrl, target: '_blank' }).run();
+                  setExternalUrl('');
+                }}
+                className="h-8 bg-[#3a3a3a] border-[#3a3a3a] text-gray-200 hover:bg-[#4a4a4a]"
+              >
+                Use URL
+              </Button>
+            </div>
             {filteredBoards.length === 0 ? (
             <div className="text-gray-400 text-sm py-1 text-center">No boards found</div>
             ) : (

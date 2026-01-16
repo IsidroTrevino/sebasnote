@@ -22,7 +22,16 @@ export default function RootLayout({
         <body>
           <ConvexClientProvider>
             <JotaiProvider>
-              <Toaster/>
+              <Toaster 
+                theme="dark"
+                toastOptions={{
+                  style: {
+                    background: '#1e1e1e',
+                    border: '1px solid #3a3a3a',
+                    color: '#e5e5e5',
+                  },
+                }}              
+              />
               <Modals />
               {children}
             </JotaiProvider>

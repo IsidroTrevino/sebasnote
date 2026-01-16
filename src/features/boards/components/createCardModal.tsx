@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { EditorContent } from '@tiptap/react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader } from "lucide-react";
+import { Loader, Link2, Palette, Plus, Trash2 } from "lucide-react";
+import { HudColorPicker } from "@/components/hudColorPicker";
+import { normalizeUrl } from '@/lib/utils';
 import { useCreateCard } from "../api/useCreateCard";
 import { useCreateCardModal } from "../store/useCreateCardModal";
 import { useBoardId } from "../api/useBoardId";
@@ -13,14 +15,58 @@ import { useListAllBoards } from "../store/useListAllBoards";
 import { useSharedEditor, EditorStyles } from '../store/useSharedEditor';
 import MenuBar from './editor/menuBar';
 import { Id } from "../../../../convex/_generated/dataModel";
+import { cn } from "@/lib/utils";
+
+// Predefined colors for mind map cards
+const CARD_COLORS = [
+  { name: "Default", value: "#2a2a2a" },
+  { name: "Red", value: "#7f1d1d" },
+  { name: "Orange", value: "#7c2d12" },
+  { name: "Yellow", value: "#713f12" },
+  { name: "Green", value: "#14532d" },
+  { name: "Teal", value: "#134e4a" },
+  { name: "Blue", value: "#1e3a5f" },
+  { name: "Purple", value: "#4c1d95" },
+  { name: "Pink", value: "#831843" },
+];
 
 export const CreateCardModal = () => {
   const [content, setContent] = useState("");
+  const [selectedColor, setSelectedColor] = useState("#2a2a2a");
+  const [linkedBoardId, setLinkedBoardId] = useState<Id<"boards"> | undefined>(undefined);
+  const [linkedUrl, setLinkedUrl] = useState<string | undefined>(undefined);
+  const [linkedUrlTitle, setLinkedUrlTitle] = useState<string | undefined>(undefined);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showBoardPicker, setShowBoardPicker] = useState(false);
+  type RefItem = { id?: string; type: 'board' | 'url'; boardId?: Id<'boards'>; url?: string; name?: string; color?: string };
+  const [linkedReferences, setLinkedReferences] = useState<RefItem[]>([]);
+  const removeRef = (idx: number) => {
+    console.log('removeRef called', idx);
+    const removed = linkedReferences?.[idx];
+    const newRefs = (linkedReferences || []).filter((_, i) => i !== idx);
+    setLinkedReferences(newRefs);
+    if (removed?.type === 'board') {
+      setLinkedBoardId(undefined);
+    }
+    console.log('new linkedReferences', newRefs);
+  };
+  
   const { mutate: createCard, isPending } = useCreateCard();
   const [open, setOpen] = useCreateCardModal();
   const boardId = useBoardId();
   const [hasDraft, setHasDraft] = useState(false);
   const { data: allBoards } = useListAllBoards();
+
+  // Filter out current board from linkable boards
+  const linkableBoards = useMemo(() => 
+    allBoards?.filter(b => b._id !== boardId) || [],
+    [allBoards, boardId]
+  );
+  // Exclude boards that are already added as references
+  const availableBoards = useMemo(() =>
+    linkableBoards.filter(b => !linkedReferences.some(r => r.type === 'board' && r.boardId === b._id)),
+    [linkableBoards, linkedReferences]
+  );
 
   // Draft handling
   const draftKey = useMemo(() => (boardId ? `sebasnote-card-draft-${boardId}` : ''), [boardId]);
@@ -66,9 +112,155 @@ export const CreateCardModal = () => {
     }
   };
 
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const boardToggleRef = useRef<HTMLButtonElement | null>(null);
+  const colorToggleRef = useRef<HTMLButtonElement | null>(null);
+  const suppressCloseRef = useRef(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [categoryInput, setCategoryInput] = useState('');
+
   const handleClose = () => {
     setOpen(false);
+    setSelectedColor("#2a2a2a");
+    setLinkedBoardId(undefined);
+    setLinkedReferences([]);
+    setShowColorPicker(false);
+    setShowBoardPicker(false);
   };
+
+  const handleCloseCb = useCallback(() => {
+    setOpen(false);
+    setSelectedColor("#2a2a2a");
+    setLinkedBoardId(undefined);
+    setLinkedReferences([]);
+    setShowColorPicker(false);
+    setShowBoardPicker(false);
+  }, [setOpen]);
+
+  const getComposedPath = (ev: Event): EventTarget[] | null => {
+    const maybe = ev as unknown as { composedPath?: () => EventTarget[] };
+    return typeof maybe.composedPath === 'function' ? maybe.composedPath() : null;
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (suppressCloseRef.current) return;
+      if (!(e.target instanceof Node)) return;
+      const path = getComposedPath(e) as unknown as EventTarget[] | null;
+      if (path && Array.isArray(path)) {
+        for (const node of path) {
+          try {
+            if (node instanceof Element && node.closest) {
+              if (
+                node.closest('[data-dialog-content="true"]') ||
+                node.closest('[data-board-picker="true"]') ||
+                node.closest('[data-color-picker="true"]') ||
+                node.closest('[data-dropdown-content="true"]')
+              ) {
+                return; // click inside dialog or known popover
+              }
+            }
+          } catch {
+            // ignore
+          }
+        }
+      }
+      const targetEl = e.target as Element;
+      if (targetEl.closest && (
+        targetEl.closest('[data-dialog-content="true"]') ||
+        targetEl.closest('[data-board-picker="true"]') ||
+        targetEl.closest('[data-color-picker="true"]') ||
+        targetEl.closest('[data-dropdown-content="true"]')
+      )) return;
+      handleCloseCb();
+    };
+    // Use capture phase so clicks that call stopPropagation are still caught
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
+  }, [open, handleCloseCb]);
+
+  // Close board picker when focus moves outside picker and toggle
+  useEffect(() => {
+    if (!showBoardPicker) return;
+    const onFocusIn = (e: FocusEvent) => {
+      if (suppressCloseRef.current) return;
+      const path = getComposedPath(e) as unknown as EventTarget[] | null;
+      if (path && Array.isArray(path)) {
+        for (const node of path) {
+          try {
+            if (node instanceof Element && node.closest && node.closest('[data-board-picker="true"]')) {
+              return; // focused inside picker
+            }
+            if (boardToggleRef.current && node === boardToggleRef.current) return;
+          } catch {
+            // ignore
+          }
+        }
+      }
+      const target = e.target as Element;
+      if (target && target.closest && target.closest('[data-board-picker="true"]')) return;
+      if (boardToggleRef.current && (boardToggleRef.current === target || boardToggleRef.current.contains(target as Node))) return;
+      setShowBoardPicker(false);
+    };
+    document.addEventListener('focusin', onFocusIn, true);
+    return () => document.removeEventListener('focusin', onFocusIn, true);
+  }, [showBoardPicker]);
+
+  // Close color picker when focus moves outside picker and toggle
+  useEffect(() => {
+    if (!showColorPicker) return;
+    const onFocusIn = (e: FocusEvent) => {
+      if (suppressCloseRef.current) return;
+      const path = getComposedPath(e) as unknown as EventTarget[] | null;
+      if (path && Array.isArray(path)) {
+        for (const node of path) {
+          try {
+            if (node instanceof Element && node.closest && node.closest('[data-color-picker="true"]')) {
+              return; // focused inside color picker
+            }
+            if (colorToggleRef.current && node === colorToggleRef.current) return;
+          } catch {
+            // ignore
+          }
+        }
+      }
+      const target = e.target as Element;
+      if (target && target.closest && target.closest('[data-color-picker="true"]')) return;
+      if (colorToggleRef.current && (colorToggleRef.current === target || colorToggleRef.current.contains(target as Node))) return;
+      setShowColorPicker(false);
+    };
+    document.addEventListener('focusin', onFocusIn, true);
+    return () => document.removeEventListener('focusin', onFocusIn, true);
+  }, [showColorPicker]);
+
+  // Also close color picker on pointerdown outside (capture) to handle mouse/pen clicks
+  useEffect(() => {
+    if (!showColorPicker) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (suppressCloseRef.current) return;
+      if (!(e.target instanceof Node)) return;
+      const path = getComposedPath(e) as unknown as EventTarget[] | null;
+      if (path && Array.isArray(path)) {
+        for (const node of path) {
+          try {
+            if (node instanceof Element && node.closest && node.closest('[data-color-picker="true"]')) {
+              return; // click inside color picker
+            }
+            if (colorToggleRef.current && node === colorToggleRef.current) return;
+          } catch {
+            // ignore
+          }
+        }
+      }
+      const targetEl = e.target as Element;
+      if (targetEl.closest && targetEl.closest('[data-color-picker="true"]')) return;
+      if (colorToggleRef.current && (colorToggleRef.current === targetEl || colorToggleRef.current.contains(targetEl as Node))) return;
+      setShowColorPicker(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
+  }, [showColorPicker]);
 
   const handleCreate = async () => {
     if (!content.trim()) {
@@ -77,15 +269,26 @@ export const CreateCardModal = () => {
     }
 
     try {
-      await createCard({
+      const payload = {
         boardId,
         content,
         width: 300,
         height: 200,
-      });
+        color: selectedColor,
+        linkedReferences: linkedReferences.length ? linkedReferences.map(r => ({ type: r.type, boardId: r.boardId, url: r.url, name: r.name, color: r.color })) : undefined,
+        linkedBoardId: linkedBoardId,
+        linkedUrl: linkedUrl,
+        categories: categories.length ? categories : undefined,
+      };
+      await createCard(payload);
       toast.success("Card created");
       editor?.commands.clearContent();
       setContent("");
+      setSelectedColor("#2a2a2a");
+      setLinkedBoardId(undefined);
+      setLinkedUrl(undefined);
+      setLinkedReferences([]);
+      setCategories([]);
       clearDraft();
       setOpen(false);
     } catch {
@@ -93,19 +296,246 @@ export const CreateCardModal = () => {
     }
   };
 
+  const selectedBoardName = linkableBoards.find(b => b._id === linkedBoardId)?.name;
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a] max-w-[90vw] w-[600px] max-h-[90vh] overflow-hidden">
+      <DialogContent ref={dialogRef} data-dialog-content="true" className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a] max-w-[96vw] w-[900px] max-h-[96vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Create new card</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 overflow-y-auto pr-2">
+          {/* Card options toolbar */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Color picker */}
+            <div className="relative">
+              <button
+                ref={colorToggleRef}
+                onClick={() => { setShowColorPicker(!showColorPicker); setShowBoardPicker(false); }}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors",
+                  showColorPicker 
+                    ? "bg-[#3a3a3a] border-[#4a4a4a]" 
+                    : "bg-[#1a1a1a] border-[#3a3a3a] hover:bg-[#2a2a2a]"
+                )}
+              >
+                <Palette className="w-4 h-4 text-gray-400" />
+                <span className="text-sm">Color</span>
+                <div 
+                  className="w-4 h-4 rounded border border-gray-500"
+                  style={{ backgroundColor: selectedColor }}
+                />
+              </button>
+              
+              {showColorPicker && (
+                <div data-color-picker="true" className="absolute top-full left-0 mt-1 p-2 bg-[#2a2a2a] border border-[#3a3a3a] rounded-lg shadow-xl z-50">
+                  <HudColorPicker
+                    color={selectedColor}
+                    onPreview={(c) => setSelectedColor(c)}
+                    onChange={(c) => setSelectedColor(c)}
+                    onClose={() => setShowColorPicker(false)}
+                    presetColors={CARD_COLORS}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Linked board / external URL picker */}
+            <div className="relative">
+              <button
+                ref={boardToggleRef}
+                onClick={() => { setShowBoardPicker(!showBoardPicker); setShowColorPicker(false); }}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors",
+                  showBoardPicker || linkedBoardId || linkedUrl || linkedReferences.length > 0
+                    ? "bg-[#3a3a3a] border-[#4a4a4a]" 
+                    : "bg-[#1a1a1a] border-[#3a3a3a] hover:bg-[#2a2a2a]"
+                )}
+              >
+                <Link2 className="w-4 h-4 text-gray-400" />
+                <span className="text-sm">
+                  {linkedReferences.length > 1 ? `Linked to ${linkedReferences.length} items` : linkedReferences.length === 1 ? `Linked: ${linkedReferences[0].name}` : linkedBoardId ? `Linked: ${selectedBoardName}` : linkedUrl ? `Linked: ${linkedUrl}` : "Link to Board/URL"}
+                </span>
+              </button>
+              
+              {showBoardPicker && (
+                <div data-board-picker="true" className="absolute top-full left-0 mt-1 p-2 bg-[#2a2a2a] border border-[#3a3a3a] rounded-lg shadow-xl z-50 max-h-56 overflow-y-auto min-w-[240px]">
+                    <div className="px-1 pb-2">
+                      <label className="text-xs text-gray-400 mb-1 block">External URL</label>
+                      <div className="flex flex-col gap-2">
+                        <input
+                          type="text"
+                          value={linkedUrl || ''}
+                          onChange={(e) => setLinkedUrl(e.target.value)}
+                          placeholder="https://example.com"
+                          className="flex-1 px-2 py-1 bg-[#1a1a1a] border border-[#333333] rounded text-sm text-gray-200"
+                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={linkedUrlTitle || ''}
+                            onChange={(e) => setLinkedUrlTitle(e.target.value)}
+                            placeholder="Title (optional)"
+                            className="flex-1 px-2 py-1 bg-[#1a1a1a] border border-[#333333] rounded text-sm text-gray-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!linkedUrl) return;
+                              const normalized = normalizeUrl(linkedUrl);
+                              if (!normalized) {
+                                toast.error('Invalid URL');
+                                return;
+                              }
+                              setLinkedBoardId(undefined);
+                              setLinkedReferences(prev => [...prev, { id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, type: 'url', url: normalized, name: linkedUrlTitle || new URL(normalized).hostname, color: '#3a3a3a' }]);
+                              setLinkedUrl(undefined);
+                              setLinkedUrlTitle(undefined);
+                              setShowBoardPicker(false);
+                            }}
+                            className="w-8 h-8 flex items-center justify-center bg-[#3a3a3a] rounded text-sm text-gray-200"
+                            title="Add URL"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  <hr className="border-[#333333] my-2" />
+                      <div className="mb-2">
+                        <div className="text-xs text-gray-400 mb-1">Add board link</div>
+                        {availableBoards.map((board) => (
+                      <div key={board._id} className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex-1 text-sm text-gray-200">{board.name}</div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Prevent outside-close handlers from firing while we add
+                            suppressCloseRef.current = true;
+                            setTimeout(() => (suppressCloseRef.current = false), 150);
+                            // Append board reference only if not already present
+                            setLinkedReferences(prev => {
+                              const exists = (prev || []).some(r => r.type === 'board' && r.boardId === board._id);
+                              if (exists) return prev;
+                              return [...(prev || []), { id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, type: 'board', boardId: board._id, name: board.name, color: '#3a3a3a' }];
+                            });
+                          }}
+                          className="w-8 h-8 flex items-center justify-center bg-[#3a3a3a] rounded text-sm text-gray-200"
+                          title={`Add link to ${board.name}`}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                      </div>
+                      <div className="mb-2">
+                        <div className="text-xs text-gray-400 mb-1">Current references</div>
+                        {linkedReferences.length === 0 ? (
+                          <div className="text-gray-500 text-sm px-3 py-2">No references added</div>
+                        ) : (
+                          linkedReferences.map((r, idx) => (
+                            <div key={r.id || idx} className="flex items-center gap-2 px-2 py-1">
+                              {r.type === 'url' ? (
+                                <input
+                                  type="text"
+                                  value={r.name || ''}
+                                  onChange={(e) => { const v = e.target.value; setLinkedReferences(prev => { const copy = [...prev]; copy[idx] = { ...copy[idx], name: v }; return copy; }); }}
+                                  className="flex-1 px-2 py-1 bg-[#1a1a1a] border border-[#333333] rounded text-sm text-gray-200"
+                                  placeholder="Title (optional)"
+                                />
+                              ) : (
+                                <div className="flex-1 text-sm text-gray-200">{r.name}</div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); removeRef(idx); }}
+                                onPointerDownCapture={(e) => {
+                                  // Prevent outside-close handlers (focus/ptr capture) from firing
+                                  e.stopPropagation();
+                                  suppressCloseRef.current = true;
+                                  setTimeout(() => (suppressCloseRef.current = false), 150);
+                                  // Call remove here as an extra precaution for environments
+                                  // where pointerdown happens before click/focus events.
+                                  removeRef(idx);
+                                }}
+                                className="w-8 h-8 flex items-center justify-center text-red-400"
+                                title="Remove reference"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      {/* categories moved out of picker */}
+                  {availableBoards.length === 0 && (
+                    <p className="text-gray-500 text-sm px-3 py-2">No other boards available</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
           <MenuBar 
             editor={editor} 
             linkableBoards={allBoards || []} 
             boardId={boardId as Id<'boards'> || '' as unknown as Id<'boards'>} 
           />
-          <div className="min-h-[150px] max-h-[50vh] bg-[#1a1a1a] p-4 rounded-lg overflow-y-auto">
+
+          {/* Categories (separate from board/url picker) */}
+          <div className="mb-2">
+            <div className="text-xs text-gray-400 mb-1">Categories</div>
+            <div className="flex gap-2 items-center mb-2">
+              <input
+                type="text"
+                value={categoryInput}
+                onChange={(e) => setCategoryInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const v = categoryInput.trim();
+                    if (!v) return;
+                    setCategories(prev => prev.includes(v) ? prev : [...prev, v]);
+                    setCategoryInput('');
+                  }
+                }}
+                placeholder="Add category and press Enter"
+                className="flex-1 px-2 py-1 bg-[#1a1a1a] border border-[#333333] rounded text-sm text-gray-200"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const v = categoryInput.trim();
+                  if (!v) return;
+                  setCategories(prev => prev.includes(v) ? prev : [...prev, v]);
+                  setCategoryInput('');
+                }}
+                className="w-8 h-8 flex items-center justify-center bg-[#3a3a3a] rounded text-sm text-gray-200"
+                title="Add category"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((c, i) => (
+                <div key={`${c}-${i}`} className="flex items-center gap-2 px-2 py-1 rounded-full bg-[#3a3a3a] text-sm text-gray-200">
+                  <span>{c}</span>
+                  <button type="button" onClick={() => setCategories(prev => prev.filter(x => x !== c))} className="text-red-400">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div 
+            className="min-h-[300px] max-h-[70vh] p-4 rounded-lg overflow-y-auto border-2"
+            style={{ 
+              backgroundColor: selectedColor === "#2a2a2a" ? "#1a1a1a" : selectedColor,
+              borderColor: selectedColor === "#2a2a2a" ? "#3a3a3a" : selectedColor
+            }}
+          >
             <EditorStyles />
             <EditorContent editor={editor} className="text-gray-200" />
           </div>

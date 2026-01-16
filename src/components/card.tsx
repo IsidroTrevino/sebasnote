@@ -14,6 +14,14 @@ interface CardProps {
   card: Doc<"cards">;
 }
 
+type LinkedReference = {
+  type: string;
+  boardId?: string;
+  url?: string;
+  name?: string;
+  color?: string;
+};
+
 export const Card = ({ card }: CardProps) => {
   const [width, setWidth] = useState(card.width || 300);
   const [height, setHeight] = useState(card.height || 200);
@@ -298,6 +306,29 @@ export const Card = ({ card }: CardProps) => {
         </>
       )}
       <div className="p-4 overflow-auto h-full">
+        {card.categories && Array.isArray(card.categories) && card.categories.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {card.categories.map((c: string, i: number) => (
+              <div key={`${c}-${i}`} className="px-2 py-0.5 rounded-full bg-[#3a3a3a] text-xs text-gray-200">
+                {c}
+              </div>
+            ))}
+          </div>
+        )}
+        {card.linkedReferences && Array.isArray(card.linkedReferences) && card.linkedReferences.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {(card.linkedReferences as LinkedReference[]).map((r, i: number) => (
+              <div
+                key={`${r.name || r.url || r.type}-${i}`}
+                className="px-2 py-0.5 rounded-full bg-[#111827] text-xs text-gray-200 flex items-center gap-2"
+                title={r.name || r.url || r.type}
+              >
+                <span className="h-2 w-2 rounded-full" style={{ background: r.color || '#6b7280' }} />
+                <span className="truncate max-w-[10rem]">{r.name || r.url || r.type}</span>
+              </div>
+            ))}
+          </div>
+        )}
         <style jsx global>{`
           .card-content p {
             margin: 0.5em 0;

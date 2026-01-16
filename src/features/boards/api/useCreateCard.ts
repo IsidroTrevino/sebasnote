@@ -8,6 +8,14 @@ type RequestType = {
     content: string;
     width?: number;
     height?: number;
+    positionX?: number;
+    positionY?: number;
+    color?: string;
+    fontSize?: number;
+    linkedBoardId?: Id<"boards">;
+    linkedReferences?: Array<{ type: string; boardId?: Id<"boards">; url?: string; name?: string; color?: string }>;
+    linkedUrl?: string;
+    categories?: string[];
 };
 type ResponseType = Id<"cards"> | null;
 

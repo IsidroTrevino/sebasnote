@@ -6,25 +6,46 @@ import { useGetChildren } from "@/features/boards/api/useGetChildren";
 import { BoardCard } from "@/components/boardCard";
 import { Loader, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/card";
 import { useCreateCardModal } from "@/features/boards/store/useCreateCardModal";
 import { useGetBoardCards } from "@/features/boards/api/useGetCards";
+import { useGetConnections } from "@/features/boards/api/useGetConnections";
 import { Document } from "@/components/document";
 import { useGetDocument } from "@/features/boards/api/useGetDocument";
 import { SpotifySongList } from "@/features/spotify/components/SpotifySongList";
 import { useCreateSpotifySongModal } from "@/features/spotify/store/useCreateSpotifySongModal";
+import { MindMapCanvas } from "@/components/mindMapCanvas";
+import { Id } from "../../../../convex/_generated/dataModel";
+import { Doc } from "../../../../convex/_generated/dataModel";
 
 export default function BoardPage() {
   const boardId = useBoardId();
   const board = useGetBoard({ id: boardId });
   const { boards: children, isLoading: isLoadingChildren } = useGetChildren(boardId);
   const { cards, isLoading: isLoadingCards } = useGetBoardCards(boardId);
+  const { connections, isLoading: isLoadingConnections } = useGetConnections(boardId);
   const { document: boardDocument, isLoading: isLoadingDocument } = useGetDocument(boardId);
   const router = useRouter();
   const [, setCreateCardOpen] = useCreateCardModal();
   const [, setSpotifyModalOpen] = useCreateSpotifySongModal();
+
+  // Local state for optimistic card positions during drag
+  const [localCards, setLocalCards] = useState<Doc<"cards">[]>([]);
+
+  // Sync cards from server to local state
+  useEffect(() => {
+    setLocalCards(cards);
+  }, [cards]);
+
+  // Handle optimistic position updates during drag
+  const handleCardPositionChange = useCallback((cardId: Id<"cards">, x: number, y: number) => {
+    setLocalCards(prev => prev.map(card => 
+      card._id === cardId 
+        ? { ...card, positionX: x, positionY: y }
+        : card
+    ));
+  }, []);
 
   // Disable all native browser tooltips globally so only custom tooltips appear
   useEffect(() => {
@@ -112,40 +133,43 @@ export default function BoardPage() {
           </div>
         ) : (
           <>
-            <div className="flex justify-end p-4 w-full">
+            <div className="absolute top-4 right-4 z-40">
               {board?.isSpotify ? (
                 <Button
-                  className="mr-4 mt-4 bg-[#1DB954] hover:bg-[#18a34a] text-black font-medium"
+                  className="bg-[#1DB954] hover:bg-[#18a34a] text-black font-medium"
                   onClick={() => setSpotifyModalOpen(true)}
                 >
                   <Plus className="mr-2 h-4 w-4"/> Add Song
                 </Button>
               ) : (
                 <Button
-                  className="mr-4 mt-4 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-gray-200 border border-[#3a3a3a]"
+                  className="bg-[#2a2a2a] hover:bg-[#3a3a3a] text-gray-200 border border-[#3a3a3a]"
                   onClick={() => setCreateCardOpen(true)}
                 >
                   <Plus className="mr-2 h-4 w-4"/> Add Card
                 </Button>
               )}
             </div>
-            <div className="p-4 flex-1 overflow-auto">
+            <div className="flex-1 overflow-hidden">
               {board?.isSpotify ? (
-                <SpotifySongList />
-              ) : isLoadingCards ? (
+                <div className="p-4 h-full overflow-auto">
+                  <SpotifySongList />
+                </div>
+              ) : isLoadingCards || isLoadingConnections ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader className="size-8 animate-spin text-muted-foreground"/>
                 </div>
-              ) : cards.length === 0 ? (
+              ) : localCards.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <p className="text-gray-400">No cards yet. Click &quot;Add Card&quot; to create one.</p>
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-6 p-4">
-                  {cards.map((card) => (
-                    <Card key={card._id} card={card} />
-                  ))}
-                </div>
+                <MindMapCanvas
+                  cards={localCards}
+                  connections={connections}
+                  boardId={boardId}
+                  onCardPositionChange={handleCardPositionChange}
+                />
               )}
             </div>
           </>
