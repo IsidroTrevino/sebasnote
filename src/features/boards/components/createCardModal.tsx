@@ -367,6 +367,11 @@ export const CreateCardModal = () => {
                           type="text"
                           value={linkedUrl || ''}
                           onChange={(e) => setLinkedUrl(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === ' ') {
+                              e.stopPropagation();
+                            }
+                          }}
                           placeholder="https://example.com"
                           className="flex-1 px-2 py-1 bg-[#1a1a1a] border border-[#333333] rounded text-sm text-gray-200"
                         />
@@ -375,6 +380,11 @@ export const CreateCardModal = () => {
                             type="text"
                             value={linkedUrlTitle || ''}
                             onChange={(e) => setLinkedUrlTitle(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === ' ') {
+                                e.stopPropagation();
+                              }
+                            }}
                             placeholder="Title (optional)"
                             className="flex-1 px-2 py-1 bg-[#1a1a1a] border border-[#333333] rounded text-sm text-gray-200"
                           />
@@ -442,6 +452,11 @@ export const CreateCardModal = () => {
                                   type="text"
                                   value={r.name || ''}
                                   onChange={(e) => { const v = e.target.value; setLinkedReferences(prev => { const copy = [...prev]; copy[idx] = { ...copy[idx], name: v }; return copy; }); }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === ' ') {
+                                      e.stopPropagation();
+                                    }
+                                  }}
                                   className="flex-1 px-2 py-1 bg-[#1a1a1a] border border-[#333333] rounded text-sm text-gray-200"
                                   placeholder="Title (optional)"
                                 />
@@ -493,6 +508,9 @@ export const CreateCardModal = () => {
                 value={categoryInput}
                 onChange={(e) => setCategoryInput(e.target.value)}
                 onKeyDown={(e) => {
+                  if (e.key === ' ') {
+                    e.stopPropagation();
+                  }
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     const v = categoryInput.trim();

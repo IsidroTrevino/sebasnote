@@ -221,6 +221,14 @@ export const MindMapCanvas = ({
         toast.info("Connection cancelled");
       }
       if (e.key === ' ') {
+        // Don't activate pan mode if user is typing in an input field
+        const target = e.target as HTMLElement;
+        const isTyping = target.tagName === 'INPUT' ||
+                        target.tagName === 'TEXTAREA' ||
+                        target.isContentEditable;
+        if (isTyping) {
+          return;
+        }
         e.preventDefault();
         setPanMode(true);
       }
