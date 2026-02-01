@@ -21,15 +21,25 @@ interface BoardNameLayoutProps {
 
 const BoardNameLayout = ({ children }: BoardNameLayoutProps) => {
     const ancestors = useBoardAncestors();
-    const isLoading = ancestors === undefined;
     const boardId = useBoardId();
     const board = useGetBoard({id: boardId});
+    const isLoading = ancestors === undefined || board === undefined;
     const [, setCreateOpen] = useCreateBoardModal();
     const router = useRouter();
-    
+
 
     useEffect(() => {
         if (!isLoading && !board) {
+            const pending = typeof window !== "undefined"
+                ? sessionStorage.getItem("pendingBoardRedirect")
+                : null;
+
+            if (pending) {
+                sessionStorage.removeItem("pendingBoardRedirect");
+                router.replace(pending);
+                return;
+            }
+
             router.push('/');
         }
     }, [board, isLoading, router]);

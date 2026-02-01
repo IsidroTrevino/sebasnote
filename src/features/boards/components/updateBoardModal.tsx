@@ -11,6 +11,7 @@ import { TrashIcon } from "lucide-react";
 import { useConfirm } from "@/features/auth/hooks/useConfirm";
 import { useRouter } from "next/navigation";
 import { useDeleteBoard } from "../api/useDeleteBoard";
+import { useBoardAncestors } from "../api/useGetBoardAncestors";
 
 const UpdateBoardModal = () => {
     const [boardName, setBoardName] = useState('');
@@ -19,6 +20,8 @@ const UpdateBoardModal = () => {
     const { mutate: deleteBoard } = useDeleteBoard();
     const boardId = useBoardId();
     const board = useGetBoard({ id: boardId });
+    const parentBoard = useGetBoard({ id: board?.parentId });
+    const ancestors = useBoardAncestors();
     const [ConfirmDialog, confirm] = useConfirm('Delete this board?', "You're about to delete this board, this action is irreversible.");
     const router = useRouter();
 
@@ -38,10 +41,31 @@ const UpdateBoardModal = () => {
 
         if(!ok) return;
 
+        // Store parent info before deletion
+        const parentFromAncestors = Array.isArray(ancestors)
+            ? ancestors[ancestors.length - 2]
+            : undefined;
+        const parentId = parentFromAncestors?._id ?? board?.parentId;
+        const parentName = parentFromAncestors?.name ?? parentBoard?.name ?? "board";
+        const parentRoute = parentId ? `/${parentId}/${encodeURIComponent(parentName)}` : null;
+
+        if (typeof window !== "undefined") {
+            if (parentRoute) {
+                sessionStorage.setItem("pendingBoardRedirect", parentRoute);
+            } else {
+                sessionStorage.removeItem("pendingBoardRedirect");
+            }
+        }
+
         deleteBoard({boardId}, {
             onSuccess: () => {
                 toast.success('Board deleted successfully');
-                router.push(`/`);
+                // Redirect to parent board if it exists, otherwise go to home
+                if (parentId) {
+                    router.replace(`/${parentId}/${encodeURIComponent(parentName)}`);
+                } else {
+                    router.push(`/`);
+                }
                 setOpen(false);
             },
             onError: () => {

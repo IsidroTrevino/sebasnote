@@ -4,5 +4,5 @@ import { useBoardId } from "./useBoardId";
 
 export const useBoardAncestors = () => {
   const boardId = useBoardId();
-  return useQuery(api.boards.getAncestors, { boardId });
+  return useQuery(api.boards.getAncestors, boardId ? { boardId } : "skip");
 };

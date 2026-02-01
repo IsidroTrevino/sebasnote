@@ -30,6 +30,8 @@ export default function BoardPage() {
   const [, setCreateCardOpen] = useCreateCardModal();
   const [, setSpotifyModalOpen] = useCreateSpotifySongModal();
 
+  const isLoading = board === undefined || isLoadingChildren;
+
   // Local state for optimistic card positions during drag
   const [localCards, setLocalCards] = useState<Doc<"cards">[]>([]);
 
@@ -102,12 +104,22 @@ export default function BoardPage() {
   }, []);
 
   useEffect(() => {
-    if (!isLoadingChildren && !board) {
+    if (!isLoading && !board) {
+      const pending = typeof window !== "undefined"
+        ? sessionStorage.getItem("pendingBoardRedirect")
+        : null;
+
+      if (pending) {
+        sessionStorage.removeItem("pendingBoardRedirect");
+        router.replace(pending);
+        return;
+      }
+
       router.push('/');
     }
-  }, [board, isLoadingChildren, router]);
+  }, [board, isLoading, router]);
 
-  if (isLoadingChildren || !board) {
+  if (isLoading || !board) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-[#1a1a1a]">
         <Loader className="size-8 animate-spin text-muted-foreground"/>
