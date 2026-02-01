@@ -3,6 +3,7 @@
 import { useGetBoard } from "@/features/boards/api/useGetBoard";
 import { useBoardId } from "@/features/boards/api/useBoardId";
 import { useGetChildren } from "@/features/boards/api/useGetChildren";
+import { useTrackBoardVisit } from "@/features/boards/api/useTrackBoardVisit";
 import { BoardCard } from "@/components/boardCard";
 import { Loader, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -29,6 +30,7 @@ export default function BoardPage() {
   const router = useRouter();
   const [, setCreateCardOpen] = useCreateCardModal();
   const [, setSpotifyModalOpen] = useCreateSpotifySongModal();
+  const { trackVisit } = useTrackBoardVisit();
 
   const isLoading = board === undefined || isLoadingChildren;
 
@@ -102,6 +104,14 @@ export default function BoardPage() {
       mo.disconnect();
     };
   }, []);
+
+  // Track board visit when board loads (only once per board)
+  useEffect(() => {
+    if (board && !board.isHome && boardId) {
+      // Fire and forget - don't wait for the mutation
+      trackVisit(boardId);
+    }
+  }, [boardId]);
 
   useEffect(() => {
     if (!isLoading && !board) {

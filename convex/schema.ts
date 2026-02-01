@@ -13,7 +13,8 @@ const schema = defineSchema({
         isSpotify: v.optional(v.boolean()),
         order: v.optional(v.number()),
         createdAt: v.number(),
-        updatedAt: v.number()
+        updatedAt: v.number(),
+        lastVisited: v.optional(v.number())
     }),
 
     projectCovers: defineTable({

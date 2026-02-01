@@ -123,8 +123,20 @@ export const getChildren = query({
             .query("boards")
             .filter(filter)
             .collect();
+        
+        // Sort by lastVisited descending (most recent first), fall back to order for boards with same lastVisited
+        return boards.sort((a, b) => {
+            const aLastVisited = a.lastVisited ?? a.createdAt;
+            const bLastVisited = b.lastVisited ?? b.createdAt;
             
-        return boards.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+            // Primary sort: by lastVisited (descending - most recent first)
+            if (bLastVisited !== aLastVisited) {
+                return bLastVisited - aLastVisited;
+            }
+            
+            // Tiebreaker: by order
+            return (a.order ?? 0) - (b.order ?? 0);
+        });
     }
 });
 
@@ -278,3 +290,25 @@ export const updateOrder = mutation({
       return args.updates.length;
     },
   });
+
+export const trackBoardVisit = mutation({
+    args: { boardId: v.id("boards") },
+    handler: async (ctx, args) => {
+        const userId = await getAuthUserId(ctx);
+        if (!userId) {
+            throw new Error("Not authenticated");
+        }
+
+        const board = await ctx.db.get(args.boardId);
+        if (!board || board.userId !== userId) {
+            throw new Error("Board not found or unauthorized");
+        }
+
+        await ctx.db.patch(args.boardId, {
+            lastVisited: Date.now(),
+            updatedAt: Date.now()
+        });
+
+        return board;
+    }
+});
