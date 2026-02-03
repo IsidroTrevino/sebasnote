@@ -19,7 +19,7 @@ export default function RootLayout({
   return (
     <ConvexAuthNextjsServerProvider>
       <html lang="en">
-        <body>
+        <body className="bg-[#1a1a1a] min-h-screen">
           <ConvexClientProvider>
             <JotaiProvider>
               <Toaster 
