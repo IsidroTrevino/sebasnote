@@ -306,11 +306,11 @@ export const UpdateCardModal = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent ref={dialogRef} data-dialog-content="true" className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a] max-w-[96vw] w-[900px] max-h-[96vh] overflow-hidden">
+      <DialogContent ref={dialogRef} data-dialog-content="true" className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a] max-w-[96vw] w-[900px] max-h-[96vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Edit card</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 overflow-y-auto pr-2">
+        <div className="space-y-4 overflow-y-auto pr-2 flex-1 min-h-0">
           {/* Card options toolbar */}
           <div className="flex items-center gap-2 flex-wrap">
             {/* Color picker */}
@@ -553,7 +553,7 @@ export const UpdateCardModal = () => {
               </div>
             </div>
           <div 
-            className="min-h-[300px] max-h-[70vh] p-4 rounded-lg overflow-y-auto border-2"
+            className="min-h-[200px] max-h-[400px] p-4 rounded-lg overflow-y-auto border-2 flex-shrink-0"
             style={{ 
               backgroundColor: selectedColor === "#2a2a2a" ? "#1a1a1a" : selectedColor,
               borderColor: selectedColor === "#2a2a2a" ? "#3a3a3a" : selectedColor
@@ -564,7 +564,7 @@ export const UpdateCardModal = () => {
             <EditorContent editor={editor} className="text-gray-200" />
           </div>
         </div>
-        <div className="flex items-center justify-end gap-3 pt-5 mt-4 border-t border-[#3a3a3a]">
+        <div className="flex items-center justify-end gap-3 pt-5 mt-4 border-t border-[#3a3a3a] flex-shrink-0">
           <Button
             variant="outline"
             onClick={handleClose}
