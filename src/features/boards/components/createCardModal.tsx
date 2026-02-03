@@ -5,8 +5,9 @@ import { EditorContent } from '@tiptap/react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader, Link2, Palette, Plus, Trash2 } from "lucide-react";
+import { Loader, Link2, Palette, Plus, Trash2, ArrowRight, ExternalLink } from "lucide-react";
 import { HudColorPicker } from "@/components/hudColorPicker";
+import { HierarchicalBoardPicker } from "./hierarchicalBoardPicker";
 import { normalizeUrl } from '@/lib/utils';
 import { useCreateCard } from "../api/useCreateCard";
 import { useCreateCardModal } from "../store/useCreateCardModal";
@@ -16,6 +17,7 @@ import { useSharedEditor, EditorStyles } from '../store/useSharedEditor';
 import MenuBar from './editor/menuBar';
 import { Id } from "../../../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { BoardType } from "@/features/types/boardType";
 
 // Predefined colors for mind map cards
 const CARD_COLORS = [
@@ -38,6 +40,7 @@ export const CreateCardModal = () => {
   const [linkedUrlTitle, setLinkedUrlTitle] = useState<string | undefined>(undefined);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showBoardPicker, setShowBoardPicker] = useState(false);
+  const [hoveredRefIdx, setHoveredRefIdx] = useState<number | null>(null);
   type RefItem = { id?: string; type: 'board' | 'url'; boardId?: Id<'boards'>; url?: string; name?: string; color?: string };
   const [linkedReferences, setLinkedReferences] = useState<RefItem[]>([]);
   const removeRef = (idx: number) => {
@@ -57,16 +60,25 @@ export const CreateCardModal = () => {
   const [hasDraft, setHasDraft] = useState(false);
   const { data: allBoards } = useListAllBoards();
 
-  // Filter out current board from linkable boards
-  const linkableBoards = useMemo(() => 
-    allBoards?.filter(b => b._id !== boardId) || [],
-    [allBoards, boardId]
-  );
-  // Exclude boards that are already added as references
-  const availableBoards = useMemo(() =>
-    linkableBoards.filter(b => !linkedReferences.some(r => r.type === 'board' && r.boardId === b._id)),
-    [linkableBoards, linkedReferences]
-  );
+  // Get board path for tooltip
+  const getBoardPath = useCallback((boardId: Id<"boards">): string => {
+    if (!allBoards) return "";
+    
+    const board = allBoards.find((b) => b._id === boardId);
+    if (!board) return "";
+
+    const path: string[] = [board.name];
+    let currentId: Id<"boards"> | undefined = board.parentId;
+
+    while (currentId) {
+      const parent = allBoards.find((b) => b._id === currentId);
+      if (!parent) break;
+      path.unshift(parent.name);
+      currentId = parent.parentId;
+    }
+
+    return path.join(" / ");
+  }, [allBoards]);
 
   // Draft handling
   const draftKey = useMemo(() => (boardId ? `sebasnote-card-draft-${boardId}` : ''), [boardId]);
@@ -95,7 +107,7 @@ export const CreateCardModal = () => {
       setContent(newContent);
     },
     enableResizableImage: true,
-    enableNavigation: false // Disable navigation for card editor
+    enableNavigation: true
   });
 
   // Apply draft content to editor when ready
@@ -296,7 +308,7 @@ export const CreateCardModal = () => {
     }
   };
 
-  const selectedBoardName = linkableBoards.find(b => b._id === linkedBoardId)?.name;
+  const selectedBoardName = (allBoards || []).find(b => b._id === linkedBoardId)?.name;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -414,31 +426,21 @@ export const CreateCardModal = () => {
                     </div>
                   <hr className="border-[#333333] my-2" />
                       <div className="mb-2">
-                        <div className="text-xs text-gray-400 mb-1">Add board link</div>
-                        {availableBoards.map((board) => (
-                      <div key={board._id} className="flex items-center justify-between gap-2 mb-1">
-                        <div className="flex-1 text-sm text-gray-200">{board.name}</div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Prevent outside-close handlers from firing while we add
+                        <div className="text-xs text-gray-400 mb-2 px-1">Add board link</div>
+                        <HierarchicalBoardPicker
+                          boards={(allBoards || []) as BoardType[]}
+                          linkedBoardIds={new Set(linkedReferences.filter(r => r.type === 'board').map(r => r.boardId as Id<"boards">))}
+                          excludeBoardId={boardId}
+                          onAddBoard={(board) => {
                             suppressCloseRef.current = true;
                             setTimeout(() => (suppressCloseRef.current = false), 150);
-                            // Append board reference only if not already present
                             setLinkedReferences(prev => {
                               const exists = (prev || []).some(r => r.type === 'board' && r.boardId === board._id);
                               if (exists) return prev;
                               return [...(prev || []), { id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, type: 'board', boardId: board._id, name: board.name, color: '#3a3a3a' }];
                             });
                           }}
-                          className="w-8 h-8 flex items-center justify-center bg-[#3a3a3a] rounded text-sm text-gray-200"
-                          title={`Add link to ${board.name}`}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                        />
                       </div>
                       <div className="mb-2">
                         <div className="text-xs text-gray-400 mb-1">Current references</div>
@@ -446,7 +448,7 @@ export const CreateCardModal = () => {
                           <div className="text-gray-500 text-sm px-3 py-2">No references added</div>
                         ) : (
                           linkedReferences.map((r, idx) => (
-                            <div key={r.id || idx} className="flex items-center gap-2 px-2 py-1">
+                            <div key={r.id || idx} className="flex items-center gap-2 px-2 py-1 relative">
                               {r.type === 'url' ? (
                                 <input
                                   type="text"
@@ -461,7 +463,20 @@ export const CreateCardModal = () => {
                                   placeholder="Title (optional)"
                                 />
                               ) : (
-                                <div className="flex-1 text-sm text-gray-200">{r.name}</div>
+                                <div 
+                                  className="flex-1 text-sm text-gray-200 cursor-pointer hover:text-green-400 transition-colors duration-200 relative group"
+                                  onMouseEnter={() => setHoveredRefIdx(idx)}
+                                  onMouseLeave={() => setHoveredRefIdx(null)}
+                                >
+                                  {r.name}
+                                  {hoveredRefIdx === idx && r.boardId && (
+                                    <div className="absolute left-0 top-full mt-1 z-[9999] bg-[#2a2a2a] border border-green-500/30 rounded px-2 py-1.5 whitespace-nowrap flex items-center gap-1.5 text-xs text-green-400 shadow-xl animate-in fade-in slide-in-from-top-1 duration-200">
+                                      <span className="font-medium">Links to:</span>
+                                      <span className="text-gray-300">{getBoardPath(r.boardId)}</span>
+                                      <ArrowRight className="w-3 h-3 animate-pulse" />
+                                    </div>
+                                  )}
+                                </div>
                               )}
                               <button
                                 type="button"
@@ -485,7 +500,7 @@ export const CreateCardModal = () => {
                         )}
                       </div>
                       {/* categories moved out of picker */}
-                  {availableBoards.length === 0 && (
+                  {!allBoards || allBoards.length === 0 && (
                     <p className="text-gray-500 text-sm px-3 py-2">No other boards available</p>
                   )}
                 </div>

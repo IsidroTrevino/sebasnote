@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { NodeSelection } from 'prosemirror-state';  // Import from prosemirror-state instead
 import { Id } from '../../../../../convex/_generated/dataModel';
@@ -32,22 +32,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { HierarchicalBoardPicker } from '../hierarchicalBoardPicker';
+import { BoardType } from '@/features/types/boardType';
 import Image from 'next/image';
 
 
 interface MenuBarProps {
   editor: Editor | null;
-  linkableBoards: { _id: Id<'boards'>; name: string }[];
+  linkableBoards: BoardType[];
   boardId: Id<'boards'>;
 }
 
 export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
-  const [search, setSearch] = useState('');
   const [externalUrl, setExternalUrl] = useState('');
-  const filteredBoards = useMemo(
-    () => linkableBoards.filter((b) => b.name.toLowerCase().includes(search.toLowerCase())),
-    [linkableBoards, search]
-  );
   const referenceImages = useQuery(api.referenceImages.getByBoardId, { boardId }) || [];
 
   if (!editor) return null;
@@ -505,12 +502,6 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-72 p-2">
-            <Input
-            placeholder="Search boards..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="mb-2 h-8 bg-[#1a1a1a] border-[#3a3a3a] text-gray-300 placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0"
-            />
             <div className="flex items-center gap-2 mb-2">
               <Input
                 placeholder="Or paste external URL"
@@ -532,27 +523,22 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
                 Use URL
               </Button>
             </div>
-            {filteredBoards.length === 0 ? (
-            <div className="text-gray-400 text-sm py-1 text-center">No boards found</div>
-            ) : (
-            filteredBoards.map((b) => (
-                <div 
-                key={b._id} 
-                className="flex items-center p-1 hover:bg-[#3a3a3a] rounded cursor-pointer"
-                onClick={() => {
-                    // Fix: Use the correct URL format to match your routing pattern
-                    // Changed from /boards/${b._id} to /${b._id}/${encodeURIComponent(b.name)}
-                    editor.chain().focus().extendMarkRange('link')
+            <hr className="border-[#333333] my-2" />
+            <div className="text-xs text-gray-400 mb-2 px-2">Link to Board</div>
+            <div className="px-2">
+              <HierarchicalBoardPicker
+                boards={linkableBoards}
+                linkedBoardIds={new Set()}
+                excludeBoardId={boardId}
+                onAddBoard={(board) => {
+                  editor.chain().focus().extendMarkRange('link')
                     .setLink({ 
-                        href: `/${b._id}/${encodeURIComponent(b.name || 'untitled')}`, 
+                        href: `/${board._id}/${encodeURIComponent(board.name || 'untitled')}`, 
                         target: '_self' 
                     }).run();
                 }}
-                >
-                {b.name}
-                </div>
-            ))
-            )}
+              />
+            </div>
         </DropdownMenuContent>
         </DropdownMenu>
 

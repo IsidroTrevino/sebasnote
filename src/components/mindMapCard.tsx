@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Doc, Id } from "../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { 
   Loader, 
@@ -12,7 +12,8 @@ import {
   Link2, 
   Palette, 
   ExternalLink,
-  Circle
+  Circle,
+  ArrowRight
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -188,6 +189,7 @@ export const MindMapCard = ({
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [isColorPickerDragging, setIsColorPickerDragging] = useState(false);
   const [previewColor, setPreviewColor] = useState<string>(card.color || "#2a2a2a");
+  const [hoveredRefIdx, setHoveredRefIdx] = useState<number | null>(null);
   
   const cardRef = useRef<HTMLDivElement>(null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
@@ -198,6 +200,7 @@ export const MindMapCard = ({
   const updatePosition = useMutation(api.cards.updatePosition);
   const updateColor = useMutation(api.cards.updateColor);
   const deleteCard = useMutation(api.cards.deleteCard);
+  const allBoards = useQuery(api.boards.listAll);
   
   const { onOpen } = useUpdateCardModal();
   const router = useRouter();
@@ -209,6 +212,26 @@ export const MindMapCard = ({
   // Casted card convenience fields (generated Convex types may not include these custom fields)
   const cardCategories = (card as unknown as { categories?: string[] }).categories;
   const cardLinkedReferences = (card as unknown as { linkedReferences?: LinkedReference[] }).linkedReferences;
+
+  // Get board path for tooltip
+  const getBoardPath = (boardId: string): string => {
+    if (!allBoards) return "";
+    
+    const board = allBoards.find((b) => b._id === boardId);
+    if (!board) return "";
+
+    const path: string[] = [board.name];
+    let currentId: Id<"boards"> | undefined = board.parentId;
+
+    while (currentId) {
+      const parent = allBoards.find((b) => b._id === currentId);
+      if (!parent) break;
+      path.unshift(parent.name);
+      currentId = parent.parentId;
+    }
+
+    return path.join(" / ");
+  };
 
   // Click outside handler for color picker
   useEffect(() => {
@@ -245,6 +268,116 @@ export const MindMapCard = ({
     setHeight(card.height || 200);
     originalDims.current = { width: card.width || 300, height: card.height || 200 };
   }, [card.width, card.height]);
+
+  // Add hover tooltips for links in card content
+  useEffect(() => {
+    if (!cardRef.current) return;
+
+    const cardEl = cardRef.current;
+    let linkTooltipEl: HTMLDivElement | null = null;
+
+    const removeLinkTooltip = () => {
+      if (linkTooltipEl && linkTooltipEl.parentNode) {
+        linkTooltipEl.parentNode.removeChild(linkTooltipEl);
+      }
+      linkTooltipEl = null;
+    };
+
+    const createLinkTooltip = (href: string, x: number, y: number) => {
+      removeLinkTooltip();
+      linkTooltipEl = document.createElement('div');
+      linkTooltipEl.style.position = 'fixed';
+      linkTooltipEl.style.left = `${x}px`;
+      linkTooltipEl.style.top = `${y + 10}px`;
+      linkTooltipEl.style.pointerEvents = 'none';
+      linkTooltipEl.style.zIndex = '9999';
+      linkTooltipEl.style.padding = '6px 8px';
+      linkTooltipEl.style.background = '#2a2a2a';
+      linkTooltipEl.style.borderRadius = '6px';
+      linkTooltipEl.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+      linkTooltipEl.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.3)';
+      linkTooltipEl.style.display = 'flex';
+      linkTooltipEl.style.alignItems = 'center';
+      linkTooltipEl.style.gap = '6px';
+      linkTooltipEl.style.fontSize = '12px';
+      linkTooltipEl.style.whiteSpace = 'nowrap';
+      linkTooltipEl.style.maxWidth = '400px';
+
+      const label = document.createElement('span');
+      label.textContent = 'Links to:';
+      label.style.fontWeight = '500';
+      label.style.color = '#22c55e';
+
+      const path = document.createElement('span');
+      path.textContent = href;
+      path.style.color = '#d1d5db';
+      path.style.overflow = 'hidden';
+      path.style.textOverflow = 'ellipsis';
+
+      const arrow = document.createElement('span');
+      arrow.innerHTML = '→';
+      arrow.style.color = '#22c55e';
+
+      linkTooltipEl.appendChild(label);
+      linkTooltipEl.appendChild(path);
+      linkTooltipEl.appendChild(arrow);
+      document.body.appendChild(linkTooltipEl);
+    };
+
+    const onClick = (e: Event) => {
+      const me = e as MouseEvent;
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+      const href = anchor?.getAttribute('href') || '';
+      const hasMod = me.metaKey || me.ctrlKey;
+
+      if (anchor && href && !href.startsWith('#')) {
+        // Require Ctrl/Cmd + Click to navigate
+        if (hasMod && href.startsWith('/')) {
+          me.preventDefault();
+          me.stopPropagation();
+          me.stopImmediatePropagation();
+          router.push(href);
+        } else {
+          // Prevent default link behavior without modifier key
+          me.preventDefault();
+          me.stopPropagation();
+          me.stopImmediatePropagation();
+        }
+      }
+    };
+
+    const onMouseOver = (e: Event) => {
+      const me = e as MouseEvent;
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+      const href = anchor?.getAttribute('href') || '';
+
+      if (anchor && href) {
+        createLinkTooltip(href, me.clientX, me.clientY);
+      }
+    };
+
+    const onMouseOut = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+
+      if (anchor) {
+        removeLinkTooltip();
+      }
+    };
+
+    cardEl.addEventListener('click', onClick, true);
+    cardEl.addEventListener('mouseover', onMouseOver);
+    cardEl.addEventListener('mouseout', onMouseOut);
+
+    return () => {
+      cardEl.removeEventListener('click', onClick, true);
+      cardEl.removeEventListener('mouseover', onMouseOver);
+      cardEl.removeEventListener('mouseout', onMouseOut);
+      removeLinkTooltip();
+    };
+  }, [router]);
 
   // Keep preview color in sync when card prop changes
   useEffect(() => {
@@ -725,28 +858,47 @@ export const MindMapCard = ({
           {cardLinkedReferences && cardLinkedReferences.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {cardLinkedReferences.map((r, idx) => (
-                <button
-                  key={idx}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (r.type === 'board' && r.boardId) {
-                      try { router.push(`/${r.boardId}/${encodeURIComponent(r.name || '')}`); } catch {};
-                    } else if (r.type === 'url' && r.url) {
-                      try {
-                        const dest = normalizeUrl(r.url) || r.url;
-                        window.open(dest, '_blank');
-                      } catch {
-                        try { window.open(r.url, '_blank'); } catch {}
+                <div key={idx} className="relative">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (r.type === 'board' && r.boardId) {
+                        try { router.push(`/${r.boardId}/${encodeURIComponent(r.name || '')}`); } catch {};
+                      } else if (r.type === 'url' && r.url) {
+                        try {
+                          const dest = normalizeUrl(r.url) || r.url;
+                          window.open(dest, '_blank');
+                        } catch {
+                          try { window.open(r.url, '_blank'); } catch {}
+                        }
                       }
-                    }
-                  }}
-                  title={r.name || (r.url || '')}
-                  className="px-2 py-1 rounded-full text-xs flex items-center gap-1 border border-transparent"
-                  style={{ backgroundColor: r.color || '#3a3a3a', color: '#fff' }}
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  <span className="truncate max-w-[120px]">{r.name}</span>
-                </button>
+                    }}
+                    onMouseEnter={() => setHoveredRefIdx(idx)}
+                    onMouseLeave={() => setHoveredRefIdx(null)}
+                    title={r.name || (r.url || '')}
+                    className="px-2 py-1 rounded-full text-xs flex items-center gap-1 border border-transparent transition-all duration-200 hover:brightness-110"
+                    style={{ backgroundColor: r.color || '#3a3a3a', color: '#fff' }}
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    <span className="truncate max-w-[120px]">{r.name}</span>
+                  </button>
+
+                  {hoveredRefIdx === idx && r.type === 'board' && r.boardId && (
+                    <div className="absolute left-0 top-full mt-1 z-[9999] bg-[#2a2a2a] border border-green-500/30 rounded px-2 py-1.5 whitespace-nowrap flex items-center gap-1.5 text-xs text-green-400 shadow-xl animate-in fade-in slide-in-from-top-1 duration-200 pointer-events-none">
+                      <span className="font-medium">Links to:</span>
+                      <span className="text-gray-300">{getBoardPath(r.boardId)}</span>
+                      <ArrowRight className="w-3 h-3 animate-pulse" />
+                    </div>
+                  )}
+
+                  {hoveredRefIdx === idx && r.type === 'url' && r.url && (
+                    <div className="absolute left-0 top-full mt-1 z-[9999] bg-[#2a2a2a] border border-blue-500/30 rounded px-2 py-1.5 whitespace-nowrap flex items-center gap-1.5 text-xs text-blue-400 shadow-xl max-w-xs animate-in fade-in slide-in-from-top-1 duration-200 pointer-events-none">
+                      <span className="font-medium">Opens:</span>
+                      <span className="text-gray-300 truncate">{r.url}</span>
+                      <ExternalLink className="w-3 h-3 animate-pulse" />
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           ) : (card.linkedBoardId && linkedBoardName) && (

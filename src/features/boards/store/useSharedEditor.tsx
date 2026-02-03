@@ -21,6 +21,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import ResizableImage from '@/lib/tiptap/resizableImage';
 import { useRouter } from 'next/navigation';
 import { useImageDialog } from './useImageDialog';
+import { Extension } from '@tiptap/core';
 
 interface UseEditorOptions {
   initialContent?: string;
@@ -28,14 +29,33 @@ interface UseEditorOptions {
   onUpdate?: (html: string) => void;
   enableResizableImage?: boolean;
   enableNavigation?: boolean;
+  onNavigate?: () => void;
 }
+
+// Custom Link extension that completely disables default click behavior
+const CustomLink = Link.extend({
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      openOnClick: false,
+    }
+  },
+  addProseMirrorPlugins() {
+    // Remove any plugins from parent that might handle clicks
+    return [];
+  },
+  addKeyboardShortcuts() {
+    return {};
+  },
+});
 
 export const useSharedEditor = ({
   initialContent = '',
   placeholder = 'Start typing...',
   onUpdate = () => {},
   enableResizableImage = true,
-  enableNavigation = true
+  enableNavigation = true,
+  onNavigate = () => {}
 }: UseEditorOptions = {}) => {
   const router = useRouter();
   const { open: openImageDialog } = useImageDialog();
@@ -64,7 +84,7 @@ export const useSharedEditor = ({
       BulletList,
       // Only include ResizableImage if enabled
       ...(enableResizableImage ? [ResizableImage] : []),
-      Link.configure({
+      CustomLink.configure({
         autolink: true,
         linkOnPaste: true,
         openOnClick: false,
@@ -97,11 +117,12 @@ export const useSharedEditor = ({
         return false;
       },
       handleDOMEvents: {
-        click(view, event) {
+        // Image resizing only - links are handled in useEffect
+        mousedown(view, event) {
           try {
             if (enableResizableImage) {
               const target = event.target as HTMLElement;
-              const wrapper = target?.closest?.('.tiptap-image-wrapper') as HTMLElement | null;
+              const wrapper = target.closest('.tiptap-image-wrapper') as HTMLElement | null;
               if (wrapper) {
                 // Resolve the position before the node view DOM and select the image node
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,18 +141,133 @@ export const useSharedEditor = ({
     },
   });
 
-  // Add the image preview functionality
+  // Handle link clicks with Ctrl+Click requirement
+  useEffect(() => {
+    if (!editor) return;
+    const el = editor.view.dom as HTMLElement;
+
+    const handleLinkMouseDown = (e: Event) => {
+      const me = e as MouseEvent;
+      const target = e.target as HTMLElement;
+      const link = target.closest('a') as HTMLAnchorElement | null;
+      
+      if (!link) return;
+
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#')) return;
+
+      // ALWAYS prevent mousedown on links to stop prosemirror selection
+      me.preventDefault();
+      me.stopPropagation();
+      me.stopImmediatePropagation();
+    };
+
+    const handleLinkClick = (e: Event) => {
+      const me = e as MouseEvent;
+      const target = e.target as HTMLElement;
+      const link = target.closest('a') as HTMLAnchorElement | null;
+      
+      if (!link) return;
+
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#')) return;
+
+      const hasMod = me.metaKey || me.ctrlKey;
+
+      // Always prevent default and stop propagation
+      me.preventDefault();
+      me.stopPropagation();
+      me.stopImmediatePropagation();
+
+      // Only navigate if Ctrl+Click
+      if (hasMod) {
+        if (enableNavigation && href.startsWith('/')) {
+          // Internal board link - open in new tab
+          window.open(href, '_blank');
+          onNavigate();
+        } else {
+          // External link - add http:// if missing
+          const url = href.startsWith('http://') || href.startsWith('https://') 
+            ? href 
+            : `https://${href}`;
+          window.open(url, '_blank');
+          onNavigate();
+        }
+      }
+    };
+
+    // Use capture phase to intercept BEFORE prosemirror
+    el.addEventListener('mousedown', handleLinkMouseDown, true);
+    el.addEventListener('click', handleLinkClick, true);
+
+    return () => {
+      el.removeEventListener('mousedown', handleLinkMouseDown, true);
+      el.removeEventListener('click', handleLinkClick, true);
+    };
+  }, [editor, router, enableNavigation, onNavigate]);
+
   useEffect(() => {
     if (!editor) return;
     const el = editor.view.dom as HTMLElement;
 
     let previewEl: HTMLDivElement | null = null;
+    let linkTooltipEl: HTMLDivElement | null = null;
 
     const removePreview = () => {
       if (previewEl && previewEl.parentNode) {
         previewEl.parentNode.removeChild(previewEl);
       }
       previewEl = null;
+    };
+
+    const removeLinkTooltip = () => {
+      if (linkTooltipEl && linkTooltipEl.parentNode) {
+        linkTooltipEl.parentNode.removeChild(linkTooltipEl);
+      }
+      linkTooltipEl = null;
+    };
+
+    const createLinkTooltip = (href: string, x: number, y: number) => {
+      removeLinkTooltip();
+      linkTooltipEl = document.createElement('div');
+      linkTooltipEl.style.position = 'fixed';
+      linkTooltipEl.style.left = `${x}px`;
+      linkTooltipEl.style.top = `${y + 10}px`;
+      linkTooltipEl.style.pointerEvents = 'none';
+      linkTooltipEl.style.zIndex = '9999';
+      linkTooltipEl.style.padding = '6px 8px';
+      linkTooltipEl.style.background = '#2a2a2a';
+      linkTooltipEl.style.borderRadius = '6px';
+      linkTooltipEl.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+      linkTooltipEl.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.3)';
+      linkTooltipEl.style.display = 'flex';
+      linkTooltipEl.style.alignItems = 'center';
+      linkTooltipEl.style.gap = '6px';
+      linkTooltipEl.style.fontSize = '12px';
+      linkTooltipEl.style.whiteSpace = 'nowrap';
+      linkTooltipEl.style.maxWidth = '400px';
+      linkTooltipEl.style.animation = 'fadeIn 0.2s ease-in-out';
+
+      const label = document.createElement('span');
+      label.textContent = 'Links to:';
+      label.style.fontWeight = '500';
+      label.style.color = '#22c55e';
+
+      const path = document.createElement('span');
+      path.textContent = href;
+      path.style.color = '#d1d5db';
+      path.style.overflow = 'hidden';
+      path.style.textOverflow = 'ellipsis';
+
+      const arrow = document.createElement('span');
+      arrow.innerHTML = '→';
+      arrow.style.color = '#22c55e';
+      arrow.style.animation = 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite';
+
+      linkTooltipEl.appendChild(label);
+      linkTooltipEl.appendChild(path);
+      linkTooltipEl.appendChild(arrow);
+      document.body.appendChild(linkTooltipEl);
     };
 
     const createPreview = (url: string) => {
@@ -171,35 +307,32 @@ export const useSharedEditor = ({
       const target = e.target as HTMLElement;
       const anchor = target.closest('a') as HTMLAnchorElement | null;
       const href = anchor?.getAttribute('href') || '';
-      const hasMod = me.metaKey || me.ctrlKey;
       const refUrl = getRefImageUrl(href);
 
       if (anchor && refUrl) {
-        e.preventDefault();
+        me.preventDefault();
+        me.stopPropagation();
+        me.stopImmediatePropagation();
         openImageDialog(refUrl);
         return;
       }
 
-      // Only handle navigation if enabled
-      if (enableNavigation) {
-        // Check if this is a board link - either starting with / or matching your board pattern
-        if (anchor && href.startsWith('/') && !href.startsWith('#')) {
-          // Only handle navigation for clicks with modifier keys (Ctrl/Cmd)
-          if (hasMod) {
-            e.preventDefault();
-            router.push(href);
-          }
-        }
-      }
+      // For regular links, the main handler above will deal with them
+      // This just handles reference images
     };
 
     const onMouseOver = (e: Event) => {
+      const me = e as MouseEvent;
       const target = e.target as HTMLElement;
       const anchor = target.closest('a') as HTMLAnchorElement | null;
       const href = anchor?.getAttribute('href') || '';
       const refUrl = getRefImageUrl(href);
+      
       if (anchor && refUrl) {
         createPreview(refUrl);
+      } else if (anchor && href && !refUrl) {
+        // Show link tooltip for regular links
+        createLinkTooltip(href, me.clientX, me.clientY);
       }
     };
 
@@ -208,8 +341,11 @@ export const useSharedEditor = ({
       const anchor = target.closest('a') as HTMLAnchorElement | null;
       const href = anchor?.getAttribute('href') || '';
       const refUrl = getRefImageUrl(href);
+      
       if (anchor && refUrl) {
         removePreview();
+      } else if (anchor && href && !refUrl) {
+        removeLinkTooltip();
       }
     };
 
@@ -226,17 +362,16 @@ export const useSharedEditor = ({
       }
     };
 
-    el.addEventListener('click', onClick);
     el.addEventListener('mouseover', onMouseOver);
     el.addEventListener('mouseout', onMouseOut);
     el.addEventListener('mousemove', onMouseMove);
 
     return () => {
-      el.removeEventListener('click', onClick);
       el.removeEventListener('mouseover', onMouseOver);
       el.removeEventListener('mouseout', onMouseOut);
       el.removeEventListener('mousemove', onMouseMove);
       removePreview();
+      removeLinkTooltip();
     };
   }, [editor, router, openImageDialog, enableNavigation]);
 
@@ -247,6 +382,26 @@ export const useSharedEditor = ({
 export const EditorStyles = () => {
   return (
     <style jsx global>{`
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pulse {
+        0%, 100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: .5;
+        }
+      }
+
       .ProseMirror-selectednode {
         outline: 2px solid #3b82f6;
         border-radius: 2px;
@@ -308,6 +463,13 @@ export const EditorStyles = () => {
         padding: 0.75em 1em;
         border-radius: 5px;
         margin: 0.5em 0;
+      }
+      .ProseMirror a {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        cursor: pointer;
       }
     `}</style>
   );

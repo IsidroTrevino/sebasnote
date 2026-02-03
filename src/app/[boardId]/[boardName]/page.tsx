@@ -106,6 +106,9 @@ export default function BoardPage() {
   }, []);
 
   // Track board visit when board loads (only once per board)
+  // Note: We intentionally exclude 'board' and 'trackVisit' from dependencies
+  // to fire only once when navigating to a new boardId
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (board && !board.isHome && boardId) {
       // Fire and forget - don't wait for the mutation

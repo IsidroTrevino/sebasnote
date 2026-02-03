@@ -46,6 +46,116 @@ export const Card = ({ card }: CardProps) => {
     originalDims.current = { width: card.width || 300, height: card.height || 200 };
   }, [card.width, card.height]);
 
+  // Add hover tooltips for links in card content
+  useEffect(() => {
+    if (!cardRef.current) return;
+
+    const cardEl = cardRef.current;
+    let linkTooltipEl: HTMLDivElement | null = null;
+
+    const removeLinkTooltip = () => {
+      if (linkTooltipEl && linkTooltipEl.parentNode) {
+        linkTooltipEl.parentNode.removeChild(linkTooltipEl);
+      }
+      linkTooltipEl = null;
+    };
+
+    const createLinkTooltip = (href: string, x: number, y: number) => {
+      removeLinkTooltip();
+      linkTooltipEl = document.createElement('div');
+      linkTooltipEl.style.position = 'fixed';
+      linkTooltipEl.style.left = `${x}px`;
+      linkTooltipEl.style.top = `${y + 10}px`;
+      linkTooltipEl.style.pointerEvents = 'none';
+      linkTooltipEl.style.zIndex = '9999';
+      linkTooltipEl.style.padding = '6px 8px';
+      linkTooltipEl.style.background = '#2a2a2a';
+      linkTooltipEl.style.borderRadius = '6px';
+      linkTooltipEl.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+      linkTooltipEl.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.3)';
+      linkTooltipEl.style.display = 'flex';
+      linkTooltipEl.style.alignItems = 'center';
+      linkTooltipEl.style.gap = '6px';
+      linkTooltipEl.style.fontSize = '12px';
+      linkTooltipEl.style.whiteSpace = 'nowrap';
+      linkTooltipEl.style.maxWidth = '400px';
+
+      const label = document.createElement('span');
+      label.textContent = 'Links to:';
+      label.style.fontWeight = '500';
+      label.style.color = '#22c55e';
+
+      const path = document.createElement('span');
+      path.textContent = href;
+      path.style.color = '#d1d5db';
+      path.style.overflow = 'hidden';
+      path.style.textOverflow = 'ellipsis';
+
+      const arrow = document.createElement('span');
+      arrow.innerHTML = '→';
+      arrow.style.color = '#22c55e';
+
+      linkTooltipEl.appendChild(label);
+      linkTooltipEl.appendChild(path);
+      linkTooltipEl.appendChild(arrow);
+      document.body.appendChild(linkTooltipEl);
+    };
+
+    const onClick = (e: Event) => {
+      const me = e as MouseEvent;
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+      const href = anchor?.getAttribute('href') || '';
+      const hasMod = me.metaKey || me.ctrlKey;
+
+      if (anchor && href && !href.startsWith('#')) {
+        // Require Ctrl/Cmd + Click to navigate
+        if (hasMod && href.startsWith('/')) {
+          me.preventDefault();
+          me.stopPropagation();
+          me.stopImmediatePropagation();
+          router.push(href);
+        } else {
+          // Prevent default link behavior without modifier key
+          me.preventDefault();
+          me.stopPropagation();
+          me.stopImmediatePropagation();
+        }
+      }
+    };
+
+    const onMouseOver = (e: Event) => {
+      const me = e as MouseEvent;
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+      const href = anchor?.getAttribute('href') || '';
+
+      if (anchor && href) {
+        createLinkTooltip(href, me.clientX, me.clientY);
+      }
+    };
+
+    const onMouseOut = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+
+      if (anchor) {
+        removeLinkTooltip();
+      }
+    };
+
+    cardEl.addEventListener('click', onClick, true);
+    cardEl.addEventListener('mouseover', onMouseOver);
+    cardEl.addEventListener('mouseout', onMouseOut);
+
+    return () => {
+      cardEl.removeEventListener('click', onClick, true);
+      cardEl.removeEventListener('mouseover', onMouseOver);
+      cardEl.removeEventListener('mouseout', onMouseOut);
+      removeLinkTooltip();
+    };
+  }, [router]);
+
   // Store current dimensions in refs for event handlers
   const widthRef = useRef(width);
   const heightRef = useRef(height);
