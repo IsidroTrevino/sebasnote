@@ -21,6 +21,7 @@ import type * as http from "../http.js";
 import type * as projectCovers from "../projectCovers.js";
 import type * as referenceImages from "../referenceImages.js";
 import type * as spotifySongs from "../spotifySongs.js";
+import type * as spreadsheets from "../spreadsheets.js";
 import type * as upload from "../upload.js";
 import type * as users from "../users.js";
 
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   projectCovers: typeof projectCovers;
   referenceImages: typeof referenceImages;
   spotifySongs: typeof spotifySongs;
+  spreadsheets: typeof spreadsheets;
   upload: typeof upload;
   users: typeof users;
 }>;

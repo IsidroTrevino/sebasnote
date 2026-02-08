@@ -24,6 +24,7 @@ const CreateBoardModal = () => {
     const isParentHome = parent?.isHome === true;
     const [isDocument, setIsDocument] = useState(true);
     const [isSpotify, setIsSpotify] = useState(false);
+    const [isExcel, setIsExcel] = useState(false);
 
     const handleClose = () => {
         setBoardName('');
@@ -50,7 +51,8 @@ const CreateBoardModal = () => {
                 parentId: boardId, 
                 isHome: false,
                 isDocument: isDocument,
-                isSpotify: isSpotify
+                isSpotify: isSpotify,
+                isExcel: isExcel
             });
 
             if (isParentHome && imageFile && newBoardId) {
@@ -95,6 +97,7 @@ const CreateBoardModal = () => {
                         onValueChange={(value) => {
                             setIsDocument(value === "Document");
                             setIsSpotify(value === "Spotify");
+                            setIsExcel(value === "Excel");
                         }}
                     >
                         <div className="flex items-center space-x-2">
@@ -108,6 +111,10 @@ const CreateBoardModal = () => {
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="Spotify" id="r3" />
                             <Label htmlFor="r3">Spotify Songs</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Excel" id="r4" />
+                            <Label htmlFor="r4">Spreadsheet</Label>
                         </div>
                     </RadioGroup>
                     

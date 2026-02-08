@@ -11,6 +11,7 @@ const schema = defineSchema({
         isHome: v.boolean(),
         isDocument: v.boolean(),
         isSpotify: v.optional(v.boolean()),
+        isExcel: v.optional(v.boolean()),
         order: v.optional(v.number()),
         createdAt: v.number(),
         updatedAt: v.number(),
@@ -76,6 +77,14 @@ const schema = defineSchema({
         boardId: v.id("boards"),
         userId: v.string(),
         content: v.string(),
+        createdAt: v.number(),
+        updatedAt: v.number()
+    }).index("by_board", ["boardId"]),
+
+    spreadsheets: defineTable({
+        boardId: v.id("boards"),
+        userId: v.string(),
+        data: v.any(),
         createdAt: v.number(),
         updatedAt: v.number()
     }).index("by_board", ["boardId"]),

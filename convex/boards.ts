@@ -36,7 +36,8 @@ export const create = mutation({
         parentId: v.optional(v.id("boards")), 
         isHome: v.optional(v.boolean()),
         isDocument: v.optional(v.boolean()),
-        isSpotify: v.optional(v.boolean())
+        isSpotify: v.optional(v.boolean()),
+        isExcel: v.optional(v.boolean())
     },
     handler: async (ctx, args) => {
         const userId = await getAuthUserId(ctx);
@@ -58,7 +59,7 @@ export const create = mutation({
             }
         }
 
-        return await ctx.db.insert("boards", {
+        const boardId = await ctx.db.insert("boards", {
             name: args.name,
             userId,
             parentId: args.parentId,
@@ -67,8 +68,35 @@ export const create = mutation({
             isHome: args.isHome ?? false,
             isDocument: args.isDocument ?? false,
             isSpotify: args.isSpotify ?? false,
+            isExcel: args.isExcel ?? false,
             order: order
         });
+
+        // Create spreadsheet data if isExcel is true
+        if (args.isExcel) {
+            const data = {
+                rows: 20,
+                cols: 10,
+                cells: {} as Record<string, { value: string; formula?: string; format?: any }>,
+            };
+
+            // Initialize with empty cells
+            for (let row = 0; row < data.rows; row++) {
+                for (let col = 0; col < data.cols; col++) {
+                    data.cells[`${row}_${col}`] = { value: "" };
+                }
+            }
+
+            await ctx.db.insert("spreadsheets", {
+                boardId,
+                userId,
+                data,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            });
+        }
+
+        return boardId;
     },
 });
 

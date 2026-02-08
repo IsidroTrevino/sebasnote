@@ -17,6 +17,8 @@ import { useGetDocument } from "@/features/boards/api/useGetDocument";
 import { SpotifySongList } from "@/features/spotify/components/SpotifySongList";
 import { useCreateSpotifySongModal } from "@/features/spotify/store/useCreateSpotifySongModal";
 import { MindMapCanvas } from "@/components/mindMapCanvas";
+import { Spreadsheet } from "@/components/spreadsheet";
+import { useGetSpreadsheet, useUpdateCell, useUpdateCellFormat, useResizeSpreadsheet, useBatchUpdateCells } from "@/features/boards/api/useSpreadsheet";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { Doc } from "../../../../convex/_generated/dataModel";
 
@@ -27,6 +29,11 @@ export default function BoardPage() {
   const { cards, isLoading: isLoadingCards } = useGetBoardCards(boardId);
   const { connections, isLoading: isLoadingConnections } = useGetConnections(boardId);
   const { document: boardDocument, isLoading: isLoadingDocument } = useGetDocument(boardId);
+  const { spreadsheet, isLoading: isLoadingSpreadsheet } = useGetSpreadsheet(boardId);
+  const updateCell = useUpdateCell();
+  const updateCellFormat = useUpdateCellFormat();
+  const { resizeColumns, resizeRows } = useResizeSpreadsheet();
+  const batchUpdateCells = useBatchUpdateCells();
   const router = useRouter();
   const [, setCreateCardOpen] = useCreateCardModal();
   const [, setSpotifyModalOpen] = useCreateSpotifySongModal();
@@ -108,12 +115,12 @@ export default function BoardPage() {
   // Track board visit when board loads (only once per board)
   // Note: We intentionally exclude 'board' and 'trackVisit' from dependencies
   // to fire only once when navigating to a new boardId
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (board && !board.isHome && boardId) {
       // Fire and forget - don't wait for the mutation
       trackVisit(boardId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boardId]);
 
   useEffect(() => {
@@ -153,6 +160,33 @@ export default function BoardPage() {
               <Document 
                 boardId={boardId} 
                 initialContent={boardDocument?.content || ''}
+              />
+            )}
+          </div>
+        ) : board?.isExcel ? (
+          <div className="flex-1 overflow-hidden">
+            {isLoadingSpreadsheet || !spreadsheet ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader className="size-8 animate-spin text-muted-foreground"/>
+              </div>
+            ) : (
+              <Spreadsheet
+                data={spreadsheet.data}
+                onCellUpdate={(row, col, value, formula) => {
+                  if (boardId) updateCell(boardId, row, col, value, formula);
+                }}
+                onCellFormatUpdate={(row, col, format) => {
+                  if (boardId) updateCellFormat(boardId, row, col, format);
+                }}
+                onResize={(rows, cols) => {
+                  if (boardId) {
+                    if (rows !== spreadsheet.data.rows) resizeRows(boardId, rows);
+                    if (cols !== spreadsheet.data.cols) resizeColumns(boardId, cols);
+                  }
+                }}
+                onBatchUpdate={(updates) => {
+                  if (boardId) batchUpdateCells(boardId, updates);
+                }}
               />
             )}
           </div>
