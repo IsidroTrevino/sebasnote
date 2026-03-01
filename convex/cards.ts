@@ -247,16 +247,7 @@ export const createConnection = mutation({
       throw new Error("Cards not found or unauthorized");
     }
 
-    // Check if connection already exists
-    const existing = await ctx.db
-      .query("cardConnections")
-      .withIndex("by_from_card", (q) => q.eq("fromCardId", args.fromCardId))
-      .filter((q) => q.eq(q.field("toCardId"), args.toCardId))
-      .first();
-
-    if (existing) {
-      throw new Error("Connection already exists");
-    }
+    // Allow multiple connections between the same cards (removed duplicate check)
 
     const connection = {
       boardId: args.boardId,
@@ -298,6 +289,12 @@ export const updateConnection = mutation({
     id: v.id("cardConnections"),
     label: v.optional(v.string()),
     color: v.optional(v.string()),
+    curveOffsetX: v.optional(v.number()),
+    curveOffsetY: v.optional(v.number()),
+    startOffsetX: v.optional(v.number()),
+    startOffsetY: v.optional(v.number()),
+    endOffsetX: v.optional(v.number()),
+    endOffsetY: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -313,6 +310,12 @@ export const updateConnection = mutation({
     const updates: Partial<typeof connection> = {};
     if (args.label !== undefined) updates.label = args.label;
     if (args.color !== undefined) updates.color = args.color;
+    if (args.curveOffsetX !== undefined) updates.curveOffsetX = args.curveOffsetX;
+    if (args.curveOffsetY !== undefined) updates.curveOffsetY = args.curveOffsetY;
+    if (args.startOffsetX !== undefined) updates.startOffsetX = args.startOffsetX;
+    if (args.startOffsetY !== undefined) updates.startOffsetY = args.startOffsetY;
+    if (args.endOffsetX !== undefined) updates.endOffsetX = args.endOffsetX;
+    if (args.endOffsetY !== undefined) updates.endOffsetY = args.endOffsetY;
 
     await ctx.db.patch(args.id, updates);
     return args.id;

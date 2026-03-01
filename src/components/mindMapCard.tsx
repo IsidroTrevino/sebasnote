@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Doc, Id } from "../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
@@ -189,10 +190,12 @@ export const MindMapCard = ({
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [isColorPickerDragging, setIsColorPickerDragging] = useState(false);
   const [previewColor, setPreviewColor] = useState<string>(card.color || "#2a2a2a");
+  const [colorPickerPosition, setColorPickerPosition] = useState({ x: 0, y: 0 });
   const [hoveredRefIdx, setHoveredRefIdx] = useState<number | null>(null);
   
   const cardRef = useRef<HTMLDivElement>(null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
+  const colorButtonRef = useRef<HTMLButtonElement | null>(null);
   const startResizeRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const startDragRef = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null);
   
@@ -775,33 +778,21 @@ export const MindMapCard = ({
           </button>
 
           {/* Color picker */}
-          <div className="relative">
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowColorPicker(!showColorPicker); }}
-              className="p-1.5 rounded-md bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-transparent hover:border-[#3a3a3a] transition-colors"
-              title="Change color"
-            >
-              <Palette className="h-4 w-4 text-gray-200" />
-            </button>
-            
-            {showColorPicker && (
-              <div 
-                ref={colorPickerRef}
-                className="absolute top-full right-0 mt-2 z-50"
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                <HudColorPicker
-                  color={cardColor}
-                  onPreview={(c) => setPreviewColor(c)}
-                  onChange={handleColorChange}
-                  onClose={() => setShowColorPicker(false)}
-                  onDraggingChange={setIsColorPickerDragging}
-                  presetColors={CARD_COLOR_PRESETS}
-                />
-              </div>
-            )}
-          </div>
+          <button
+            ref={colorButtonRef}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!showColorPicker && colorButtonRef.current) {
+                const rect = colorButtonRef.current.getBoundingClientRect();
+                setColorPickerPosition({ x: rect.right, y: rect.bottom + 8 });
+              }
+              setShowColorPicker(!showColorPicker);
+            }}
+            className="p-1.5 rounded-md bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-transparent hover:border-[#3a3a3a] transition-colors"
+            title="Change color"
+          >
+            <Palette className="h-4 w-4 text-gray-200" />
+          </button>
 
           {/* Edit button */}
           <button
@@ -832,6 +823,31 @@ export const MindMapCard = ({
             )}
           </button>
         </div>
+      )}
+
+      {/* Color picker portal - rendered at body level to avoid card overflow constraints */}
+      {showColorPicker && typeof window !== 'undefined' && createPortal(
+        <div 
+          ref={colorPickerRef}
+          className="fixed z-[9999]"
+          style={{
+            left: `${colorPickerPosition.x}px`,
+            top: `${colorPickerPosition.y}px`,
+            transform: 'translateX(-100%)'
+          }}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <HudColorPicker
+            color={cardColor}
+            onPreview={(c) => setPreviewColor(c)}
+            onChange={handleColorChange}
+            onClose={() => setShowColorPicker(false)}
+            onDraggingChange={setIsColorPickerDragging}
+            presetColors={CARD_COLOR_PRESETS}
+          />
+        </div>,
+        document.body
       )}
 
       {/* Linked board badge */}

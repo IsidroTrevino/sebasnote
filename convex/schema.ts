@@ -68,6 +68,12 @@ const schema = defineSchema({
         toCardId: v.id("cards"),
         label: v.optional(v.string()),
         color: v.optional(v.string()),
+        curveOffsetX: v.optional(v.number()),
+        curveOffsetY: v.optional(v.number()),
+        startOffsetX: v.optional(v.number()),
+        startOffsetY: v.optional(v.number()),
+        endOffsetX: v.optional(v.number()),
+        endOffsetY: v.optional(v.number()),
         createdAt: v.number()
     }).index("by_board", ["boardId"])
       .index("by_from_card", ["fromCardId"])
