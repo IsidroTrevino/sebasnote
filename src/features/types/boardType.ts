@@ -8,7 +8,11 @@ export type BoardType = {
     isHome: boolean;
     isDocument: boolean;
     isSpotify?: boolean;
+    isExcel?: boolean;
+    isRanking?: boolean;
     userId: string;
+    order?: number;
     createdAt: number;
     updatedAt: number;
+    lastVisited?: number;
 };

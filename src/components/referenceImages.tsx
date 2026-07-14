@@ -67,6 +67,7 @@ export const ReferenceImages = ({ board }: ReferenceImagesGridProps) => {
                     <Image
                         src={image.url || ''}
                         fill
+                        sizes="(max-width: 768px) 42vw, 160px"
                         className="object-cover rounded-md"
                         alt={getImageName(image.url || '', image.title || '')}
                     />

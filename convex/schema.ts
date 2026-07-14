@@ -12,6 +12,7 @@ const schema = defineSchema({
         isDocument: v.boolean(),
         isSpotify: v.optional(v.boolean()),
         isExcel: v.optional(v.boolean()),
+        isRanking: v.optional(v.boolean()),
         order: v.optional(v.number()),
         createdAt: v.number(),
         updatedAt: v.number(),
@@ -91,6 +92,32 @@ const schema = defineSchema({
         boardId: v.id("boards"),
         userId: v.string(),
         data: v.any(),
+        createdAt: v.number(),
+        updatedAt: v.number()
+    }).index("by_board", ["boardId"]),
+
+    rankingBoards: defineTable({
+        boardId: v.id("boards"),
+        userId: v.string(),
+        mode: v.union(v.literal("image"), v.literal("text")),
+        rows: v.array(v.object({
+            id: v.string(),
+            label: v.string(),
+            color: v.string(),
+        })),
+        createdAt: v.number(),
+        updatedAt: v.number()
+    }).index("by_board", ["boardId"]),
+
+    rankingItems: defineTable({
+        boardId: v.id("boards"),
+        userId: v.string(),
+        rowId: v.string(),
+        type: v.union(v.literal("image"), v.literal("text")),
+        text: v.optional(v.string()),
+        storageId: v.optional(v.string()),
+        url: v.optional(v.string()),
+        order: v.number(),
         createdAt: v.number(),
         updatedAt: v.number()
     }).index("by_board", ["boardId"]),

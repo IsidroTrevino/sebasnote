@@ -5,7 +5,7 @@ import { EditorContent } from '@tiptap/react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader, Link2, Palette, Plus, Trash2, ArrowRight, ExternalLink } from "lucide-react";
+import { Loader, Link2, Palette, Plus, Trash2, ArrowRight } from "lucide-react";
 import { HudColorPicker } from "@/components/hudColorPicker";
 import { HierarchicalBoardPicker } from "./hierarchicalBoardPicker";
 import { normalizeUrl } from '@/lib/utils';
@@ -312,7 +312,7 @@ export const CreateCardModal = () => {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent ref={dialogRef} data-dialog-content="true" className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a] max-w-[96vw] w-[900px] max-h-[96vh] flex flex-col">
+      <DialogContent ref={dialogRef} aria-describedby={undefined} data-dialog-content="true" className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a] max-w-[96vw] w-[900px] max-h-[96vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Create new card</DialogTitle>
         </DialogHeader>
@@ -519,6 +519,8 @@ export const CreateCardModal = () => {
             <div className="text-xs text-gray-400 mb-1">Categories</div>
             <div className="flex gap-2 items-center mb-2">
               <input
+                id="create-card-category"
+                name="createCardCategory"
                 type="text"
                 value={categoryInput}
                 onChange={(e) => setCategoryInput(e.target.value)}

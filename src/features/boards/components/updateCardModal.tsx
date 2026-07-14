@@ -7,7 +7,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "sonner";
 import { EditorContent } from '@tiptap/react';
-import { Loader, Palette, Link2, Plus, Trash2, ExternalLink, ArrowRight } from "lucide-react";
+import { Loader, Palette, Link2, Plus, Trash2, ArrowRight } from "lucide-react";
 import { HierarchicalBoardPicker } from "./hierarchicalBoardPicker";
 import { normalizeUrl } from '@/lib/utils';
 import { HudColorPicker } from "@/components/hudColorPicker";
@@ -306,7 +306,7 @@ export const UpdateCardModal = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent ref={dialogRef} data-dialog-content="true" className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a] max-w-[96vw] w-[900px] max-h-[96vh] flex flex-col">
+      <DialogContent ref={dialogRef} aria-describedby={undefined} data-dialog-content="true" className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a] max-w-[96vw] w-[900px] max-h-[96vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Edit card</DialogTitle>
         </DialogHeader>
@@ -509,6 +509,8 @@ export const UpdateCardModal = () => {
               <div className="text-xs text-gray-400 mb-1">Categories</div>
               <div className="flex gap-2 items-center mb-2">
                 <input
+                  id="update-card-category"
+                  name="updateCardCategory"
                   type="text"
                   value={categoryInput}
                   onChange={(e) => setCategoryInput(e.target.value)}

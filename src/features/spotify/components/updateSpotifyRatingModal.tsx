@@ -58,22 +58,25 @@ export const UpdateSpotifyRatingModal: React.FC = () => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="bg-[#181818] text-gray-300 border border-[#2a2a2a] max-w-[92vw] w-[520px] p-0 overflow-hidden">
+      <DialogContent aria-describedby={undefined} className="bg-[#181818] text-gray-300 border border-[#2a2a2a] max-w-[92vw] w-[520px] p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-5 pb-3 border-b border-[#2a2a2a]">
           <DialogTitle className="text-lg">
-            Edit rating{payload?.title ? ` — ${payload.title}` : ""}
+            Edit rating{payload?.title ? ` - ${payload.title}` : ""}
           </DialogTitle>
         </DialogHeader>
 
         <div className="p-6 space-y-5">
           <div className="space-y-3">
-            <Label className="text-sm text-gray-400">Rating</Label>
+            <Label htmlFor="spotify-edit-rating" className="text-sm text-gray-400">Rating</Label>
             
             {/* Rating scale selector */}
             <div className="flex items-center gap-3 mb-3">
               <span className="text-xs text-gray-500">Custom Range:</span>
               <div className="flex items-center gap-2">
                 <Input
+                  id="spotify-edit-rating-min"
+                  name="spotifyEditRatingMin"
+                  aria-label="Minimum rating"
                   type="number"
                   inputMode="numeric"
                   min={-10000}
@@ -95,6 +98,9 @@ export const UpdateSpotifyRatingModal: React.FC = () => {
                 />
                 <span className="text-xs text-gray-500">to</span>
                 <Input
+                  id="spotify-edit-rating-max"
+                  name="spotifyEditRatingMax"
+                  aria-label="Maximum rating"
                   type="number"
                   inputMode="numeric"
                   min={ratingMin + 1}
@@ -129,6 +135,9 @@ export const UpdateSpotifyRatingModal: React.FC = () => {
                 }}
               />
               <Input
+                id="spotify-edit-rating"
+                name="spotifyEditRating"
+                aria-label="Rating value"
                 type="number"
                 inputMode="decimal"
                 min={ratingMin}
@@ -156,8 +165,10 @@ export const UpdateSpotifyRatingModal: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm text-gray-400 block">Rating description (optional)</Label>
+            <Label htmlFor="spotify-edit-rating-description" className="text-sm text-gray-400 block">Rating description (optional)</Label>
             <textarea
+              id="spotify-edit-rating-description"
+              name="spotifyEditRatingDescription"
               value={ratingDescription}
               onChange={(e) => setRatingDescription(e.target.value)}
               placeholder="Why do you rate it this way?"

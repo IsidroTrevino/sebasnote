@@ -21,7 +21,6 @@ import TextAlign from '@tiptap/extension-text-align';
 import ResizableImage from '@/lib/tiptap/resizableImage';
 import { useRouter } from 'next/navigation';
 import { useImageDialog } from './useImageDialog';
-import { Extension } from '@tiptap/core';
 
 interface UseEditorOptions {
   initialContent?: string;
@@ -63,7 +62,15 @@ export const useSharedEditor = ({
   // Initialize the editor with shared configuration
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        bold: false,
+        italic: false,
+        strike: false,
+        blockquote: false,
+        heading: false,
+        listItem: false,
+        bulletList: false,
+      }),
       Placeholder.configure({
         placeholder,
       }),
@@ -97,6 +104,7 @@ export const useSharedEditor = ({
       }),
     ],
     content: initialContent,
+    immediatelyRender: false,
     onUpdate: ({ editor }) => {
       const newContent = editor.getHTML();
       onUpdate(newContent);
@@ -362,11 +370,13 @@ export const useSharedEditor = ({
       }
     };
 
+    el.addEventListener('click', onClick, true);
     el.addEventListener('mouseover', onMouseOver);
     el.addEventListener('mouseout', onMouseOut);
     el.addEventListener('mousemove', onMouseMove);
 
     return () => {
+      el.removeEventListener('click', onClick, true);
       el.removeEventListener('mouseover', onMouseOver);
       el.removeEventListener('mouseout', onMouseOut);
       el.removeEventListener('mousemove', onMouseMove);

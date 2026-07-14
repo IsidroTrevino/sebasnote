@@ -22,13 +22,12 @@ const CreateBoardModal = () => {
     const boardId = useBoardId();
     const parent = useGetBoard({ id: boardId });
     const isParentHome = parent?.isHome === true;
-    const [isDocument, setIsDocument] = useState(true);
-    const [isSpotify, setIsSpotify] = useState(false);
-    const [isExcel, setIsExcel] = useState(false);
+    const [boardType, setBoardType] = useState("Document");
 
     const handleClose = () => {
         setBoardName('');
         setImageFile(null);
+        setBoardType("Document");
         setOpen(false);
     }
 
@@ -46,14 +45,17 @@ const CreateBoardModal = () => {
         setIsSubmitting(true);
         
         try {
-            const newBoardId = await mutate({
+            const boardPayload = {
                 name: boardName, 
                 parentId: boardId, 
                 isHome: false,
-                isDocument: isDocument,
-                isSpotify: isSpotify,
-                isExcel: isExcel
-            });
+                isDocument: boardType === "Document",
+                isSpotify: boardType === "Spotify",
+                isExcel: boardType === "Excel",
+                ...(boardType === "Ranking" ? { isRanking: true } : {}),
+            };
+
+            const newBoardId = await mutate(boardPayload);
 
             if (isParentHome && imageFile && newBoardId) {
                 await uploadCover({
@@ -73,7 +75,7 @@ const CreateBoardModal = () => {
 
     return (
         <Dialog open={open} onOpenChange={() => handleClose()}>
-            <DialogContent className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a]">
+            <DialogContent aria-describedby={undefined} className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a]">
                 <DialogHeader>
                     <DialogTitle>
                         Add a board
@@ -81,6 +83,8 @@ const CreateBoardModal = () => {
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <Input 
+                        id="board-name"
+                        name="boardName"
                         className="bg-[#4a4a4a] border-[#3a3a3a] focus:border-[#2a2a2a] text-gray-300" 
                         value={boardName} 
                         disabled={isPending} 
@@ -93,12 +97,8 @@ const CreateBoardModal = () => {
                     />
 
                     <RadioGroup 
-                        defaultValue="Document"
-                        onValueChange={(value) => {
-                            setIsDocument(value === "Document");
-                            setIsSpotify(value === "Spotify");
-                            setIsExcel(value === "Excel");
-                        }}
+                        value={boardType}
+                        onValueChange={setBoardType}
                     >
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="Document" id="r1" />
@@ -116,14 +116,20 @@ const CreateBoardModal = () => {
                             <RadioGroupItem value="Excel" id="r4" />
                             <Label htmlFor="r4">Spreadsheet</Label>
                         </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Ranking" id="r5" />
+                            <Label htmlFor="r5">Ranking Board</Label>
+                        </div>
                     </RadioGroup>
                     
                     {isParentHome && (
                         <div className="space-y-2">
-                            <label className="text-sm text-gray-400">
+                            <label htmlFor="project-cover" className="text-sm text-gray-400">
                                 Project Cover Image
                             </label>
                             <Input 
+                                id="project-cover"
+                                name="projectCover"
                                 type="file"
                                 accept="image/*"
                                 onChange={handleImageChange}

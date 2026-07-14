@@ -14,9 +14,9 @@ interface HeaderProps {
 
 const Header = ({ ancestorsData, currentBoard, isLoading }: HeaderProps) => {
     return (
-        <div className="flex flex-col bg-[#2a2a2a] shadow-lg border-b border-[#3a3a3a]">
-            <div className="h-16 w-full flex items-center justify-between px-6">
-                <div className="flex items-center gap-2 text-white">
+        <div className="flex shrink-0 flex-col bg-[#2a2a2a] shadow-lg border-b border-[#3a3a3a]">
+            <div className="h-16 w-full flex items-center justify-between gap-3 px-3 sm:px-6">
+                <div className="flex min-w-0 items-center gap-2 overflow-x-auto text-white">
                     {isLoading ? (
                         <Loader className="size-4 animate-spin text-muted-foreground" />
                     ) : (
@@ -25,7 +25,7 @@ const Header = ({ ancestorsData, currentBoard, isLoading }: HeaderProps) => {
                                 {index > 0 && <ChevronRight className="size-4 text-gray-400" />}
                                 <Link 
                                     href={`/${board._id}/${encodeURIComponent(board.name)}`}
-                                    className="hover:underline transition text-gray-400 font-semibold"
+                                    className="max-w-[42vw] truncate whitespace-nowrap text-sm font-semibold text-gray-400 transition hover:underline sm:max-w-none sm:text-base"
                                 >
                                     {board.name}
                                 </Link>
@@ -35,7 +35,7 @@ const Header = ({ ancestorsData, currentBoard, isLoading }: HeaderProps) => {
                 </div>
                 <UserButton/>
             </div>
-            <div className={cn((currentBoard?.parentId === undefined) ? "flex items-center justify-center text-2xl font-bold" : "flex items-center justify-center text-2xl font-bold pb-4")}>
+            <div className={cn((currentBoard?.parentId === undefined) ? "flex items-center justify-center px-3 text-xl font-bold sm:text-2xl" : "flex items-center justify-center px-3 pb-3 text-xl font-bold sm:pb-4 sm:text-2xl")}>
                 {currentBoard?.parentId === undefined ? "" : currentBoard?.name}
             </div>
         </div>

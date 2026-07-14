@@ -21,7 +21,7 @@ export const BoardCard = ({ id, name }: BoardCardProps) => {
   }
 
   return (
-    <Link href={`/${id}/${name}`}>
+    <Link href={`/${id}/${encodeURIComponent(name)}`}>
       <div className="group aspect-[16/9] relative rounded-lg overflow-hidden border border-[#3a3a3a] hover:border-[#4a4a4a] transition-all">
         {cover?.url ? (
           <Image

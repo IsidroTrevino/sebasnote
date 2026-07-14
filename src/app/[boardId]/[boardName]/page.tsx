@@ -18,6 +18,7 @@ import { SpotifySongList } from "@/features/spotify/components/SpotifySongList";
 import { useCreateSpotifySongModal } from "@/features/spotify/store/useCreateSpotifySongModal";
 import { MindMapCanvas } from "@/components/mindMapCanvas";
 import { Spreadsheet } from "@/components/spreadsheet";
+import { RankingBoard } from "@/components/rankingBoard";
 import { useGetSpreadsheet, useUpdateCell, useUpdateCellFormat, useResizeSpreadsheet, useBatchUpdateCells } from "@/features/boards/api/useSpreadsheet";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { Doc } from "../../../../convex/_generated/dataModel";
@@ -149,9 +150,9 @@ export default function BoardPage() {
 
   if (!board?.isHome) {
     return (
-      <div className="flex flex-col h-screen w-full bg-[#1a1a1a]">
+      <div className="flex h-full min-h-0 w-full flex-col bg-[#1a1a1a]">
         {board?.isDocument ? (
-          <div className="p-4 flex-1 overflow-auto">
+          <div className="min-h-0 flex-1 overflow-auto p-2 sm:p-4">
             {isLoadingDocument ? (
               <div className="flex items-center justify-center h-full">
                 <Loader className="size-8 animate-spin text-muted-foreground"/>
@@ -164,7 +165,7 @@ export default function BoardPage() {
             )}
           </div>
         ) : board?.isExcel ? (
-          <div className="flex-1 overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-hidden">
             {isLoadingSpreadsheet || !spreadsheet ? (
               <div className="flex items-center justify-center h-full">
                 <Loader className="size-8 animate-spin text-muted-foreground"/>
@@ -190,9 +191,13 @@ export default function BoardPage() {
               />
             )}
           </div>
+        ) : board?.isRanking ? (
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <RankingBoard boardId={boardId} />
+          </div>
         ) : (
           <>
-            <div className="absolute top-4 right-4 z-40">
+            <div className="absolute right-3 top-3 z-40 sm:right-4 sm:top-4">
               {board?.isSpotify ? (
                 <Button
                   className="bg-[#1DB954] hover:bg-[#18a34a] text-black font-medium"
@@ -209,9 +214,9 @@ export default function BoardPage() {
                 </Button>
               )}
             </div>
-            <div className="flex-1 overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-hidden">
               {board?.isSpotify ? (
-                <div className="p-4 h-full overflow-auto">
+                <div className="h-full overflow-auto p-2 sm:p-4">
                   <SpotifySongList />
                 </div>
               ) : isLoadingCards || isLoadingConnections ? (
@@ -239,8 +244,8 @@ export default function BoardPage() {
 
   // Home board view
   return (
-    <div className="flex flex-col min-h-screen w-screen p-6 bg-[#1a1a1a]">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 flex-grow">
+    <div className="flex min-h-full w-full flex-col bg-[#1a1a1a] p-4 sm:p-6">
+      <div className="grid flex-grow grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {children?.map((board) => (
           <BoardCard 
             key={board._id} 

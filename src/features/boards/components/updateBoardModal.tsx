@@ -99,7 +99,7 @@ const UpdateBoardModal = () => {
         <>
             <ConfirmDialog />
             <Dialog open={open} onOpenChange={() => handleClose()}>
-                <DialogContent className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a]">
+                <DialogContent aria-describedby={undefined} className="bg-[#2a2a2a] text-gray-300 border-[#3a3a3a]">
                     <DialogHeader>
                         <DialogTitle>
                             Update your board

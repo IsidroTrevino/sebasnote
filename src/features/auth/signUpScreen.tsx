@@ -48,7 +48,7 @@ export const SignUpScreen = () => {
     };
     
     return (
-        <Card className="w-[420px] h-auto px-5 rounded-xl shadow-lg bg-[#2a2a2a] border-[#3a3a3a]">
+        <Card className="h-auto w-full max-w-[420px] rounded-xl border-[#3a3a3a] bg-[#2a2a2a] px-4 shadow-lg sm:px-5">
             <CardHeader className="gap-y-4">
                 <CardTitle className="font-bold text-3xl text-gray-200">
                     Sign Up
@@ -66,36 +66,48 @@ export const SignUpScreen = () => {
             <CardContent className="">
                 <form onSubmit={onPasswordSignUp} className="space-y-4">
                     <Input 
+                        id="signup-name"
+                        name="name"
                         className="w-full bg-[#1a1a1a] border-[#3a3a3a] text-gray-200 placeholder:text-gray-500 focus:ring-[#4a4a4a] focus:border-[#4a4a4a]" 
                         type="text" 
                         placeholder="Username" 
+                        autoComplete="name"
                         onChange={(e) => setName(e.target.value)} 
                         value={name} 
                         disabled={pending} 
                         required
                     />
                     <Input 
+                        id="signup-email"
+                        name="email"
                         className="w-full bg-[#1a1a1a] border-[#3a3a3a] text-gray-200 placeholder:text-gray-500 focus:ring-[#4a4a4a] focus:border-[#4a4a4a]" 
                         type="email" 
                         placeholder="Email" 
+                        autoComplete="email"
                         onChange={(e) => setEmail(e.target.value)} 
                         value={email} 
                         disabled={pending} 
                         required
                     />
                     <Input 
+                        id="signup-password"
+                        name="password"
                         className="w-full bg-[#1a1a1a] border-[#3a3a3a] text-gray-200 placeholder:text-gray-500 focus:ring-[#4a4a4a] focus:border-[#4a4a4a]" 
                         type="password" 
                         placeholder="Password" 
+                        autoComplete="new-password"
                         onChange={(e) => setPassword(e.target.value)} 
                         value={password} 
                         disabled={pending} 
                         required
                     />
                     <Input 
+                        id="signup-confirm-password"
+                        name="confirmPassword"
                         className="w-full bg-[#1a1a1a] border-[#3a3a3a] text-gray-200 placeholder:text-gray-500 focus:ring-[#4a4a4a] focus:border-[#4a4a4a]" 
                         type="password" 
-                        placeholder="Password" 
+                        placeholder="Confirm password"
+                        autoComplete="new-password"
                         onChange={(e) => setConfirmPassword(e.target.value)} 
                         value={confirmPassword} 
                         disabled={pending} 

@@ -931,7 +931,7 @@ export const MindMapCard = ({
       {/* Content */}
       {showDeleteConfirm && (
         <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-          <DialogContent className="max-w-md bg-[#111217] border border-[#2b2b2b] text-gray-200">
+          <DialogContent aria-describedby={undefined} className="max-w-md bg-[#111217] border border-[#2b2b2b] text-gray-200">
             <DialogHeader className="text-left">
               <DialogTitle className="text-gray-100">Delete card</DialogTitle>
               <DialogDescription className="text-sm text-gray-400">Are you sure you want to delete this card? This action cannot be undone.</DialogDescription>

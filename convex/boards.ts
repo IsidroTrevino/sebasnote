@@ -37,7 +37,8 @@ export const create = mutation({
         isHome: v.optional(v.boolean()),
         isDocument: v.optional(v.boolean()),
         isSpotify: v.optional(v.boolean()),
-        isExcel: v.optional(v.boolean())
+        isExcel: v.optional(v.boolean()),
+        isRanking: v.optional(v.boolean())
     },
     handler: async (ctx, args) => {
         const userId = await getAuthUserId(ctx);
@@ -69,6 +70,7 @@ export const create = mutation({
             isDocument: args.isDocument ?? false,
             isSpotify: args.isSpotify ?? false,
             isExcel: args.isExcel ?? false,
+            isRanking: args.isRanking ?? false,
             order: order
         });
 
@@ -91,6 +93,25 @@ export const create = mutation({
                 boardId,
                 userId,
                 data,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            });
+        }
+
+        if (args.isRanking) {
+            await ctx.db.insert("rankingBoards", {
+                boardId,
+                userId,
+                mode: "image",
+                rows: [
+                    { id: "ss-plus", label: "SS+", color: "#dc2626" },
+                    { id: "ss", label: "SS", color: "#ea580c" },
+                    { id: "s", label: "S", color: "#f59e0b" },
+                    { id: "a", label: "A", color: "#22c55e" },
+                    { id: "b", label: "B", color: "#3b82f6" },
+                    { id: "c", label: "C", color: "#8b5cf6" },
+                    { id: "d", label: "D", color: "#6b7280" },
+                ],
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
             });
@@ -266,6 +287,36 @@ export const deleteBoard = mutation({
                 
             if (document) {
                 await ctx.db.delete(document._id);
+            }
+
+            const spreadsheet = await ctx.db
+                .query("spreadsheets")
+                .filter((q) => q.eq(q.field("boardId"), boardId))
+                .first();
+
+            if (spreadsheet) {
+                await ctx.db.delete(spreadsheet._id);
+            }
+
+            const rankingBoard = await ctx.db
+                .query("rankingBoards")
+                .filter((q) => q.eq(q.field("boardId"), boardId))
+                .first();
+
+            if (rankingBoard) {
+                await ctx.db.delete(rankingBoard._id);
+            }
+
+            const rankingItems = await ctx.db
+                .query("rankingItems")
+                .filter((q) => q.eq(q.field("boardId"), boardId))
+                .collect();
+
+            for (const item of rankingItems) {
+                if (item.storageId) {
+                    await ctx.storage.delete(item.storageId);
+                }
+                await ctx.db.delete(item._id);
             }
 
             const children = await ctx.db

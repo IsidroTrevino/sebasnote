@@ -34,11 +34,11 @@ export const DeleteSpotifySongModal: React.FC = () => {
   };
 
   const title = payload?.title || "this song";
-  const artist = payload?.artist ? ` — ${payload.artist}` : "";
+  const artist = payload?.artist ? ` - ${payload.artist}` : "";
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="bg-[#181818] text-gray-300 border border-[#2a2a2a] max-w-[92vw] w-[480px] p-0 overflow-hidden">
+      <DialogContent aria-describedby={undefined} className="bg-[#181818] text-gray-300 border border-[#2a2a2a] max-w-[92vw] w-[480px] p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-5 pb-3 border-b border-[#2a2a2a]">
           <DialogTitle className="text-lg">Remove song</DialogTitle>
         </DialogHeader>

@@ -157,19 +157,23 @@ export const CreateSpotifySongModal = () => {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-[#181818] text-gray-300 border border-[#2a2a2a] max-w-[92vw] w-[860px] max-h-[80vh] p-0 overflow-hidden flex flex-col">
+      <DialogContent aria-describedby={undefined} className="bg-[#181818] text-gray-300 border border-[#2a2a2a] max-w-[92vw] w-[860px] max-h-[80vh] p-0 overflow-hidden flex flex-col">
         <DialogHeader className="px-6 pt-5 pb-3 border-b border-[#2a2a2a] shrink-0">
           <DialogTitle className="text-lg">Add a Spotify Song</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 flex-1 overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 flex-1 overflow-y-auto overflow-x-hidden">
           {/* Left: form */}
-          <div className="md:col-span-2 p-6 space-y-6">
+          <div className="min-w-0 md:col-span-2 p-6 space-y-6">
             {/* Link fetch row */}
             <div className="space-y-2">
-              <Label className="text-sm text-gray-400">Spotify URL (optional)</Label>
+              <Label htmlFor="spotify-url" className="text-sm text-gray-400">Spotify URL (optional)</Label>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Input
+                  id="spotify-url"
+                  name="spotifyUrl"
+                  type="url"
+                  autoComplete="url"
                   value={spotifyUrl}
                   onChange={(e) => setSpotifyUrl(e.target.value)}
                   placeholder="https://open.spotify.com/track/..."
@@ -179,6 +183,7 @@ export const CreateSpotifySongModal = () => {
                   type="button"
                   onClick={handleFetch}
                   disabled={isFetching || !isSpotifyTrackUrl(spotifyUrl)}
+                  aria-label="Fetch Spotify song details"
                   className="bg-[#1DB954] hover:bg-[#18a34a] text-black font-medium"
                 >
                   {isFetching ? <Loader className="w-4 h-4 animate-spin" /> : (
@@ -197,8 +202,12 @@ export const CreateSpotifySongModal = () => {
             {/* Song details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-sm text-gray-400">Title</Label>
+                <Label htmlFor="spotify-title" className="text-sm text-gray-400">Title</Label>
                 <Input
+                  id="spotify-title"
+                  name="spotifyTitle"
+                  type="text"
+                  autoComplete="off"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Song title"
@@ -206,8 +215,12 @@ export const CreateSpotifySongModal = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm text-gray-400">Artist</Label>
+                <Label htmlFor="spotify-artist" className="text-sm text-gray-400">Artist</Label>
                 <Input
+                  id="spotify-artist"
+                  name="spotifyArtist"
+                  type="text"
+                  autoComplete="off"
                   value={artist}
                   onChange={(e) => setArtist(e.target.value)}
                   placeholder="Artist name"
@@ -220,10 +233,15 @@ export const CreateSpotifySongModal = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm text-gray-400">Duration</Label>
+                  <Label htmlFor="spotify-duration" className="text-sm text-gray-400">Duration</Label>
                   <span className="text-[10px] text-gray-500">mm:ss or seconds</span>
                 </div>
                 <Input
+                  id="spotify-duration"
+                  name="spotifyDuration"
+                  type="text"
+                  autoComplete="off"
+                  inputMode="text"
                   value={durationText}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -247,8 +265,12 @@ export const CreateSpotifySongModal = () => {
                 ) : null}
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label className="text-sm text-gray-400">Cover URL (optional)</Label>
+                <Label htmlFor="spotify-cover-url" className="text-sm text-gray-400">Cover URL (optional)</Label>
                 <Input
+                  id="spotify-cover-url"
+                  name="spotifyCoverUrl"
+                  type="url"
+                  autoComplete="url"
                   value={coverUrl || ""}
                   onChange={(e) => setCoverUrl(e.target.value || undefined)}
                   placeholder="https://image/url.jpg"
@@ -259,13 +281,16 @@ export const CreateSpotifySongModal = () => {
 
             {/* Rating section */}
             <div className="space-y-3">
-              <Label className="text-sm text-gray-400">Rating</Label>
+              <Label htmlFor="spotify-rating" className="text-sm text-gray-400">Rating</Label>
               
               {/* Rating scale selector */}
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-xs text-gray-500">Custom Range:</span>
                 <div className="flex items-center gap-2">
                   <Input
+                    id="spotify-rating-min"
+                    name="spotifyRatingMin"
+                    aria-label="Minimum rating"
                     type="number"
                     inputMode="numeric"
                     min={-10000}
@@ -287,6 +312,9 @@ export const CreateSpotifySongModal = () => {
                   />
                   <span className="text-xs text-gray-500">to</span>
                   <Input
+                    id="spotify-rating-max"
+                    name="spotifyRatingMax"
+                    aria-label="Maximum rating"
                     type="number"
                     inputMode="numeric"
                     min={ratingMin + 1}
@@ -320,6 +348,9 @@ export const CreateSpotifySongModal = () => {
                   }}
                 />
                 <Input
+                  id="spotify-rating"
+                  name="spotifyRating"
+                  aria-label="Rating value"
                   type="number"
                   inputMode="decimal"
                   min={ratingMin}
@@ -346,8 +377,10 @@ export const CreateSpotifySongModal = () => {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-sm text-gray-400 block">Rating description (optional)</Label>
+                <Label htmlFor="spotify-rating-description" className="text-sm text-gray-400 block">Rating description (optional)</Label>
                 <textarea
+                  id="spotify-rating-description"
+                  name="spotifyRatingDescription"
                   value={ratingDescription}
                   onChange={(e) => setRatingDescription(e.target.value)}
                   placeholder="Why do you rate it this way? Share details (this will show fully in the list view)."
@@ -379,7 +412,7 @@ export const CreateSpotifySongModal = () => {
           </div>
 
           {/* Right: preview */}
-          <div className="border-t md:border-t-0 md:border-l border-[#2a2a2a] p-6">
+          <div className="min-w-0 border-t md:border-t-0 md:border-l border-[#2a2a2a] p-6">
             <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-md p-4 flex flex-col items-center justify-center">
               {coverUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element

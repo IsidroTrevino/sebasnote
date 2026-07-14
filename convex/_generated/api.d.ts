@@ -19,6 +19,7 @@ import type * as cards from "../cards.js";
 import type * as documents from "../documents.js";
 import type * as http from "../http.js";
 import type * as projectCovers from "../projectCovers.js";
+import type * as rankings from "../rankings.js";
 import type * as referenceImages from "../referenceImages.js";
 import type * as spotifySongs from "../spotifySongs.js";
 import type * as spreadsheets from "../spreadsheets.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   documents: typeof documents;
   http: typeof http;
   projectCovers: typeof projectCovers;
+  rankings: typeof rankings;
   referenceImages: typeof referenceImages;
   spotifySongs: typeof spotifySongs;
   spreadsheets: typeof spreadsheets;

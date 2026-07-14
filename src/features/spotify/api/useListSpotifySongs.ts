@@ -25,6 +25,8 @@ export type SpotifySongCard = {
   content: SpotifySongContent;
 };
 
+const EMPTY_SONGS: SpotifySongCard[] = [];
+
 export const useListSpotifySongs = (boardId?: Id<"boards">) => {
   const data = useQuery(
     api.spotifySongs.listByBoard,
@@ -32,7 +34,7 @@ export const useListSpotifySongs = (boardId?: Id<"boards">) => {
   ) as SpotifySongCard[] | undefined;
 
   return {
-    songs: data || [],
+    songs: data ?? EMPTY_SONGS,
     isLoading: data === undefined && boardId !== undefined,
   };
 };

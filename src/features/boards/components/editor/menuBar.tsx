@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { NodeSelection } from 'prosemirror-state';  // Import from prosemirror-state instead
-import { Id } from '../../../../../convex/_generated/dataModel';
+import { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
 import { useQuery } from 'convex/react';
 import {
@@ -43,9 +43,11 @@ interface MenuBarProps {
   boardId: Id<'boards'>;
 }
 
+const EMPTY_REFERENCE_IMAGES: Doc<'referenceImages'>[] = [];
+
 export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
   const [externalUrl, setExternalUrl] = useState('');
-  const referenceImages = useQuery(api.referenceImages.getByBoardId, { boardId }) || [];
+  const referenceImages = useQuery(api.referenceImages.getByBoardId, { boardId }) ?? EMPTY_REFERENCE_IMAGES;
 
   if (!editor) return null;
 
@@ -80,6 +82,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
       <Button
         size="icon"
         variant="outline"
+        aria-label="Bold"
         onClick={() => editor.chain().focus().toggleBold().run()}
         disabled={!editor.can().chain().focus().toggleBold().run()}
         className={`h-8 w-8 ${editor.isActive('bold') ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
@@ -89,6 +92,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
       <Button
         size="icon"
         variant="outline"
+        aria-label="Italic"
         onClick={() => editor.chain().focus().toggleItalic().run()}
         disabled={!editor.can().chain().focus().toggleItalic().run()}
         className={`h-8 w-8 ${editor.isActive('italic') ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
@@ -98,6 +102,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
       <Button
         size="icon"
         variant="outline"
+        aria-label="Underline"
         onClick={() => editor.chain().focus().toggleUnderline().run()}
         disabled={!editor.can().chain().focus().toggleUnderline().run()}
         className={`h-8 w-8 ${editor.isActive('underline') ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
@@ -107,6 +112,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
       <Button
         size="icon"
         variant="outline"
+        aria-label="Strikethrough"
         onClick={() => editor.chain().focus().toggleStrike().run()}
         disabled={!editor.can().chain().focus().toggleStrike().run()}
         className={`h-8 w-8 ${editor.isActive('strike') ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
@@ -117,6 +123,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
+            aria-label="Highlight color"
             className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
           >
             <HighlighterIcon className="h-4 w-4" />
@@ -124,27 +131,27 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56 p-2">
           <div className="grid grid-cols-6 gap-2 mb-2">
-            <button className="h-4 w-4 rounded bg-[rgba(253,230,138,0.35)]" onClick={(e) => {
+            <button type="button" aria-label="Set yellow highlight" className="h-4 w-4 rounded bg-[rgba(253,230,138,0.35)]" onClick={(e) => {
               e.preventDefault();
               editor.chain().focus().setHighlight({ color: 'rgba(253,230,138,0.35)' }).run();
             }} />
-            <button className="h-4 w-4 rounded bg-[rgba(187,247,208,0.35)]" onClick={(e) => {
+            <button type="button" aria-label="Set green highlight" className="h-4 w-4 rounded bg-[rgba(187,247,208,0.35)]" onClick={(e) => {
               e.preventDefault();
               editor.chain().focus().setHighlight({ color: 'rgba(187,247,208,0.35)' }).run();
             }} />
-            <button className="h-4 w-4 rounded bg-[rgba(191,219,254,0.35)]" onClick={(e) => {
+            <button type="button" aria-label="Set blue highlight" className="h-4 w-4 rounded bg-[rgba(191,219,254,0.35)]" onClick={(e) => {
               e.preventDefault();
               editor.chain().focus().setHighlight({ color: 'rgba(191,219,254,0.35)' }).run();
             }} />
-            <button className="h-4 w-4 rounded bg-[rgba(254,202,202,0.35)]" onClick={(e) => {
+            <button type="button" aria-label="Set red highlight" className="h-4 w-4 rounded bg-[rgba(254,202,202,0.35)]" onClick={(e) => {
               e.preventDefault();
               editor.chain().focus().setHighlight({ color: 'rgba(254,202,202,0.35)' }).run();
             }} />
-            <button className="h-4 w-4 rounded bg-[rgba(221,214,254,0.35)]" onClick={(e) => {
+            <button type="button" aria-label="Set violet highlight" className="h-4 w-4 rounded bg-[rgba(221,214,254,0.35)]" onClick={(e) => {
               e.preventDefault();
               editor.chain().focus().setHighlight({ color: 'rgba(221,214,254,0.35)' }).run();
             }} />
-            <button className="h-4 w-4 rounded bg-[rgba(251,207,232,0.35)]" onClick={(e) => {
+            <button type="button" aria-label="Set pink highlight" className="h-4 w-4 rounded bg-[rgba(251,207,232,0.35)]" onClick={(e) => {
               e.preventDefault();
               editor.chain().focus().setHighlight({ color: 'rgba(251,207,232,0.35)' }).run();
             }} />
@@ -173,6 +180,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
       <Button
         size="icon"
         variant="outline"
+        aria-label="Align left"
         onClick={() => editor.chain().focus().setTextAlign('left').run()}
         disabled={!editor.can().chain().focus().setTextAlign('left').run()}
         className={`h-8 w-8 ${editor.isActive({ textAlign: 'left' }) ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
@@ -182,6 +190,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
       <Button
         size="icon"
         variant="outline"
+        aria-label="Align center"
         onClick={() => editor.chain().focus().setTextAlign('center').run()}
         disabled={!editor.can().chain().focus().setTextAlign('center').run()}
         className={`h-8 w-8 ${editor.isActive({ textAlign: 'center' }) ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
@@ -191,6 +200,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
       <Button
         size="icon"
         variant="outline"
+        aria-label="Align right"
         onClick={() => editor.chain().focus().setTextAlign('right').run()}
         disabled={!editor.can().chain().focus().setTextAlign('right').run()}
         className={`h-8 w-8 ${editor.isActive({ textAlign: 'right' }) ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
@@ -203,6 +213,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
       <Button
         size="icon"
         variant="outline"
+        aria-label="Block quote"
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         disabled={!editor.can().chain().focus().toggleBlockquote().run()}
         className={`h-8 w-8 ${editor.isActive('blockquote') ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
@@ -212,6 +223,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
       <Button
         size="icon"
         variant="outline"
+        aria-label="Heading 1"
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         disabled={!editor.can().chain().focus().toggleHeading({ level: 1 }).run()}
         className={`h-8 w-8 ${editor.isActive('heading', { level: 1 }) ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
@@ -221,6 +233,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
       <Button
         size="icon"
         variant="outline"
+        aria-label="Heading 2"
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         disabled={!editor.can().chain().focus().toggleHeading({ level: 2 }).run()}
         className={`h-8 w-8 ${editor.isActive('heading', { level: 2 }) ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
@@ -230,6 +243,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
       <Button
         size="icon"
         variant="outline"
+        aria-label="Heading 3"
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         disabled={!editor.can().chain().focus().toggleHeading({ level: 3 }).run()}
         className={`h-8 w-8 ${editor.isActive('heading', { level: 3 }) ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
@@ -239,6 +253,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
       <Button
         size="icon"
         variant="outline"
+        aria-label="Bullet list"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         disabled={!editor.can().chain().focus().toggleBulletList().run()}
         className={`h-8 w-8 ${editor.isActive('bulletList') ? 'bg-[#4a4a4a]' : 'bg-[#2a2a2a]'} border-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-300`}
@@ -253,6 +268,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
+            aria-label="Font family"
             className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
           >
             <Type className="h-4 w-4" />
@@ -307,6 +323,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
+            aria-label="Font size"
             className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
           >
             <TextCursorInput className="h-4 w-4" />
@@ -334,6 +351,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
+            aria-label="Text color"
             className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
           >
             <Palette className="h-4 w-4" />
@@ -341,12 +359,12 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56 p-2">
           <div className="grid grid-cols-6 gap-2 mb-2">
-            <button className="h-4 w-4 rounded-full bg-[#e5e7eb]" onClick={(e) => {e.preventDefault(); editor.chain().focus().setColor('#e5e7eb').run();}} />
-            <button className="h-4 w-4 rounded-full bg-[#f87171]" onClick={(e) => {e.preventDefault(); editor.chain().focus().setColor('#f87171').run();}} />
-            <button className="h-4 w-4 rounded-full bg-[#60a5fa]" onClick={(e) => {e.preventDefault(); editor.chain().focus().setColor('#60a5fa').run();}} />
-            <button className="h-4 w-4 rounded-full bg-[#34d399]" onClick={(e) => {e.preventDefault(); editor.chain().focus().setColor('#34d399').run();}} />
-            <button className="h-4 w-4 rounded-full bg-[#fbbf24]" onClick={(e) => {e.preventDefault(); editor.chain().focus().setColor('#fbbf24').run();}} />
-            <button className="h-4 w-4 rounded-full bg-[#a78bfa]" onClick={(e) => {e.preventDefault(); editor.chain().focus().setColor('#a78bfa').run();}} />
+            <button type="button" aria-label="Set gray text" className="h-4 w-4 rounded-full bg-[#e5e7eb]" onClick={(e) => {e.preventDefault(); editor.chain().focus().setColor('#e5e7eb').run();}} />
+            <button type="button" aria-label="Set red text" className="h-4 w-4 rounded-full bg-[#f87171]" onClick={(e) => {e.preventDefault(); editor.chain().focus().setColor('#f87171').run();}} />
+            <button type="button" aria-label="Set blue text" className="h-4 w-4 rounded-full bg-[#60a5fa]" onClick={(e) => {e.preventDefault(); editor.chain().focus().setColor('#60a5fa').run();}} />
+            <button type="button" aria-label="Set green text" className="h-4 w-4 rounded-full bg-[#34d399]" onClick={(e) => {e.preventDefault(); editor.chain().focus().setColor('#34d399').run();}} />
+            <button type="button" aria-label="Set yellow text" className="h-4 w-4 rounded-full bg-[#fbbf24]" onClick={(e) => {e.preventDefault(); editor.chain().focus().setColor('#fbbf24').run();}} />
+            <button type="button" aria-label="Set violet text" className="h-4 w-4 rounded-full bg-[#a78bfa]" onClick={(e) => {e.preventDefault(); editor.chain().focus().setColor('#a78bfa').run();}} />
           </div>
           <Input
             type="color"
@@ -397,11 +415,16 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
                 }}
                 >
                 <div className="w-12 h-12 bg-[#1a1a1a] rounded overflow-hidden flex items-center justify-center relative">
-                    <Image 
-                        src={img.url || ''} // Add default empty string to handle null
-                        alt={img.title || 'Reference image'} 
-                        className="max-w-full max-h-full object-contain" 
-                    />
+                    {img.url && (
+                      <Image
+                        src={img.url}
+                        alt={img.title || 'Reference image'}
+                        fill
+                        sizes="48px"
+                        className="object-contain"
+                        unoptimized
+                      />
+                    )}
                 </div>
                 <div className="flex-1 truncate">{img.title || getImageName(img.url)}</div>
               </div>
@@ -463,6 +486,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
+            aria-label="Image wrap"
             className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
             disabled={!canWrapImage}
           >
@@ -496,6 +520,7 @@ export const MenuBar = ({ editor, linkableBoards, boardId }: MenuBarProps) => {
         <DropdownMenuTrigger asChild>
             <Button
             variant="outline"
+            aria-label="Insert link"
             className="h-8 gap-2 bg-[#2a2a2a] border-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]"
             >
             <Link2 className="h-4 w-4" />

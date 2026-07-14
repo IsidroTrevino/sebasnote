@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from "react";
-import { ChevronRight, Plus, Check, ArrowRight } from "lucide-react";
+import { ChevronRight, Plus, Check } from "lucide-react";
 import { BoardType } from "@/features/types/boardType";
 import { Id } from "../../../../convex/_generated/dataModel";
 
@@ -24,8 +24,6 @@ export const HierarchicalBoardPicker = ({
   const [justAddedBoardIds, setJustAddedBoardIds] = useState<Set<Id<"boards">>>(
     new Set()
   );
-  const [hoveredBoardId, setHoveredBoardId] = useState<Id<"boards"> | null>(null);
-
   // Get root boards (no parent)
   const rootBoards = useMemo(
     () => boards.filter((b) => !b.parentId && b._id !== excludeBoardId),
@@ -45,24 +43,6 @@ export const HierarchicalBoardPicker = ({
     });
     return map;
   }, [boards, excludeBoardId]);
-
-  // Get board path for tooltip
-  const getBoardPath = useCallback((boardId: Id<"boards">): string => {
-    const board = boards.find((b) => b._id === boardId);
-    if (!board) return "";
-
-    const path: string[] = [board.name];
-    let currentId: Id<"boards"> | undefined = board.parentId;
-
-    while (currentId) {
-      const parent = boards.find((b) => b._id === currentId);
-      if (!parent) break;
-      path.unshift(parent.name);
-      currentId = parent.parentId;
-    }
-
-    return path.join(" / ");
-  }, [boards]);
 
   const toggleExpanded = (boardId: Id<"boards">) => {
     setExpandedBoardIds((prev) => {

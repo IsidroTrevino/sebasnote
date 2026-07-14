@@ -253,14 +253,18 @@ export const MindMapCanvas = ({
       {/* Zoom controls */}
       <div className="absolute top-4 left-4 z-50 flex flex-col gap-1 bg-[#2a2a2a] rounded-lg p-1 border border-[#3a3a3a] shadow-lg">
         <button
+          type="button"
           onClick={zoomIn}
+          aria-label="Zoom in"
           className="p-2 hover:bg-[#3a3a3a] rounded transition-colors"
           title="Zoom in"
         >
           <ZoomIn className="w-4 h-4 text-gray-300" />
         </button>
         <button
+          type="button"
           onClick={zoomOut}
+          aria-label="Zoom out"
           className="p-2 hover:bg-[#3a3a3a] rounded transition-colors"
           title="Zoom out"
         >
@@ -268,14 +272,18 @@ export const MindMapCanvas = ({
         </button>
         <div className="h-px bg-[#3a3a3a] mx-1" />
         <button
+          type="button"
           onClick={fitToContent}
+          aria-label="Fit to content"
           className="p-2 hover:bg-[#3a3a3a] rounded transition-colors"
           title="Fit to content"
         >
           <Maximize2 className="w-4 h-4 text-gray-300" />
         </button>
         <button
+          type="button"
           onClick={resetView}
+          aria-label="Reset view"
           className="p-2 hover:bg-[#3a3a3a] rounded transition-colors"
           title="Reset view"
         >
@@ -283,7 +291,9 @@ export const MindMapCanvas = ({
         </button>
         <div className="h-px bg-[#3a3a3a] mx-1" />
         <button
+          type="button"
           onClick={() => setPanMode(!panMode)}
+          aria-label={panMode ? "Disable pan mode" : "Enable pan mode"}
           className={cn(
             "p-2 rounded transition-colors",
             panMode ? "bg-blue-500/30" : "hover:bg-[#3a3a3a]"

@@ -1,6 +1,8 @@
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { Id } from "../../../../convex/_generated/dataModel";
+import { Doc, Id } from "../../../../convex/_generated/dataModel";
+
+const EMPTY_CONNECTIONS: Doc<"cardConnections">[] = [];
 
 export const useGetConnections = (boardId?: Id<"boards">) => {
   const connections = useQuery(
@@ -9,7 +11,7 @@ export const useGetConnections = (boardId?: Id<"boards">) => {
   );
 
   return {
-    connections: connections || [],
+    connections: connections ?? EMPTY_CONNECTIONS,
     isLoading: connections === undefined && boardId !== undefined
   };
 };

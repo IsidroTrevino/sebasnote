@@ -39,12 +39,10 @@ const BoardSidebar = ({ board }: BoardSidebarProps) => {
   const [hasReordered, setHasReordered] = useState(false);
 
   useEffect(() => {
-    if (fetchedChildren && !hasReordered) {
+    if (!hasReordered) {
       setChildren(fetchedChildren);
-    } else if (!fetchedChildren && children === undefined) {
-      setChildren([]);
     }
-  }, [fetchedChildren, hasReordered, children]);
+  }, [fetchedChildren, hasReordered]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

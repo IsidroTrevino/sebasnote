@@ -271,7 +271,7 @@ export const SpotifySongList: React.FC = () => {
                         Open
                       </a>
                     ) : (
-                      <span className="text-gray-500">—</span>
+                      <span className="text-gray-500">-</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -279,6 +279,7 @@ export const SpotifySongList: React.FC = () => {
                       <Button
                         size="sm"
                         variant="ghost"
+                        aria-label={`Edit rating for ${s.content.title}`}
                         onClick={() => onEdit(s._id, s.content.title, s.content.rating, s.content.ratingMin, s.content.ratingMax, s.content.ratingDescription)}
                         className="text-gray-300 hover:bg-[#2a2a2a]"
                       >
@@ -287,6 +288,7 @@ export const SpotifySongList: React.FC = () => {
                       <Button
                         size="sm"
                         variant="ghost"
+                        aria-label={`Delete ${s.content.title}`}
                         onClick={() => onDelete(s._id, s.content.title, s.content.artist)}
                         className="text-red-400 hover:bg-[#2a2a2a]"
                       >

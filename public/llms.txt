@@ -1,0 +1,14 @@
+# Sebas Note
+
+Sebas Note is a personal workspace for notes, boards, reference images, ranking boards, spreadsheets, and music lists.
+
+## Primary Paths
+
+- [Workspace home](/): Authenticated workspace home.
+- [Log in](/auth/LogIn): User login.
+- [Sign up](/auth/SignUp): User signup.
+- `/[boardId]/[boardName]`: Dynamic board workspace for documents, card grids, Spotify lists, spreadsheets, and ranking boards.
+
+## Usage Notes
+
+The application is user-authenticated. Private workspace data should not be crawled, indexed, or used for model training without the user's explicit permission.
